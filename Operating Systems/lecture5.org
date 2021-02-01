@@ -1,0 +1,45 @@
+* Questions and Keywords
+What kind of challenges did early programmers face without any memory abstractions? 
+What abstractions were created to solve these?
+How do the needs of a scheduling algorithm change based on wether the system is batch, interactive, or real time?
+What problems can we run into when we have readers and writers executing simultaneously?
+How can we solve these problems? 
+Do the solutions present any new problems?
+* Notes
+** readers/writers
+any amount of people can write *or* 1 writer can write. The mutex is only used to serial access to a reader counter. The database is unlocked for writers when there is 0 readers. Only the first and last reader issue down and up operations.
+it is possible that the writer will have to wait forever, presents a difficult scheduling problem
+** scheduling: process behavior
+some processes are cpu-bound, these do a lot of computation and few syscalls
+some processes are io bound, do little computation and then wait for io stuff
+we need to make all these processes happy
+we schedule to decide which process to run next. we schedule when we have to block processes, processes exit, or when processes are created. 
+non-preemptive schedulers run each process to completion. CPU is never taken away from the process until it says so. preemptive scheduling is th opposite.
+generally, the goals of scheduling are fairness, policy enforcement and balance.
+*** Batch system scheduling
+we want to maximize throughput, minimize time between submitting job and getting the result, and keep the CPU busy at all time
+*** Algorithms for batch system scheduling
+**** First come-first serve
+proccesses jobs in order of arrival, non pre-emptive. can result in the convoy effect, where i/o operations that do like one disc read and then get pushed to the back of the queue.
+**** Shortest Job first
+Pick the job with the shortest run time. only works if we know the run time of the job before hand. results in the lowest turnaround time. however, if we get new jobs they might be starved.
+*** Interactive systems
+we need to respond to requests quickly, and meet users expectations i.e. we need a window to close instantaneously.
+*** Algorithms for interactive system scheduling
+**** Round Robin
+we assign a process a time slice. if it doesn't finish executing in that time, too bad. we can't make the time slice too short, as its expensive to context switch
+**** Priority scheduling
+has multiple queues for different priority values. queues just run round robin style. how to assign these processes are assigned priority is kinda complicated. 
+**** minimizing process response time in a priority queue
+we use a shortest job first and rry to predict the next running time. we use a weighted moving average to do this.
+*** Guaranteed scheduling
+each process gets 1/num of processes of cpu time.
+*** Lottery scheduling
+give processes lottery tickets, os chooses a lottery ticket. proccesses have multiple lottery tickets which is how priority is implemented. tickets can also be traded between processes.
+*** Real Time systems
+these need to avoid missing deadlines, and operate predictably
+**** How to assign priorities?
+** Memory management
+In the early days, we would just have a block of memory with no abstractions. we would just move each program into a dedicated region. we run into problems with relocation and memory protection when we do this. this is slow and insecure
+Address spaces mean that every program has a range of addresses that it can access. a base register keeps track of where the program starts. MMU resolves jumps relative to the base register. Limit register protects other programs
+

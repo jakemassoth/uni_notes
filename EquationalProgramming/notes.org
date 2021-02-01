@@ -1,0 +1,106 @@
+#+SETUPFILE: https://fniessen.github.io/org-html-themes/setup/theme-readtheorg.setup
+* Lecture 1
+** Functional Programming
+Functional programs are expressions and are executed by evaluating that expression. Functions are pure such that the same input gives the same output.
+** Lambda calculus
+$\lambda$ calculus notation uses nameless functions in the form $\lambda x.M$ which represents a function that maps input $x$ to $M$
+
+Parathesis are generally omitted for "readability" (idk about that tbh) and application is associative to the left. Abstraction is associative to the right. Lambda extends to the right as far as possible. 
+*** Terms as trees
+Variables and constants are leaves. $\lambda$ abstractions are unary nodes and applications are binary nodes. 
+
+subterms correspond to subtree.
+*** Bound and unbound variables
+A variable $x$ is bound by the first $\lambda x$ above it in the term tree. 
+
+Variables that are not bound are free. A term is closed if it has no free variables.
+*** $\beta$ reduction
+the "kernel" of the lambda calculus
+\begin{equation}
+  (\lambda x.M)N = M[x:=N]
+\end{equation}
+
+Terms follow reflexivity, symmetry and transitivity. 
+
+$M[x:=N]$ is the result of substituting $N$ for the free occurrences of $x$ in $M$
+
+As a reduction rule:
+\begin{equation}
+  (\lambda x.M)N \rightarrow_\beta M[x:=N]
+\end{equation}
+
+This reduction is also compatible with term formation.
+
+When substituting, you need to be careful to name your variables correctly so that free variables don't become bound. This renaming of bound variables is known as $\alpha$ conversion. We do this whenever it is necessary to avoid the capture of a free variable when substituting.
+* Lecture 2
+** Formal definition of the $\alpha$ conversion
+You can only subsitute x for y if y is not in the set of free variables of M
+** Currying 
+Reducing a function with several arguments to many functions with single arguments. 
+
+for example:
+
+$(x, y) \rightarrow x+y$ becomes $\lambda x.\lambda y.x+y$
+
+We can give not all the variables to a function, this is called a partial application.
+** $\beta$ redex
+An instance of the left-hand size of the $\beta$ -reduction rule. AKA a sub-term of the form $(\lambda x.M)N$
+
+a $\beta$ -normal form term does not include a $\beta$ redex. It is the result of a computation, we don't need any further steps to see what it means. 
+** Relationship with Haskell
+"Functions are first class citizens". AKA functions are equally as important as variables. However, we can't check the equality of functions. This would make haskell able to solve unsolvable problems, such as the collatz conjecture.
+
+Currently we are only considering untyped calculus, however in haskell you need to use arguments of the right type in an application. 
+* Lecture 3
+** Strong and weak normalization
+FILL THIS IN 
+** Fixed point combinators
+$x$ is a fixed point of $f$ if $f(x) = x$
+
+In lambda calculus, $M$ is a fixed of $F$ if $F M =_\beta M$. For example, for $F = I$ (the identity function), every term $M$ is a fixed point of $I$
+
+*** Towards fixed points
+Take a term $F$ and consider $W=\lambda x.F(x x)$
+
+If we define $W W$ and beta-reduce it, we find that $F(W W) =_\beta W W$. In other words, the results are the same as the input. We can use this to define recursive functions. We have found a fixed point, namely $W W$ for $F$.
+*** What is a fixed point combinator?
+$Y$ is a fixed point combinator if $F(Y F) =_\beta Y F$. We can use a Y-combinator to construct a fixed point for any term. 
+** Strategies for reduction
+When constructing a reduction graph of a lambda term, vertices are terms and edges are $\beta$ - reduction steps. Reduction trees can be infinite or weird.
+
+A strategy will give us a reduction with a desired property.
+
+A normalizing strategy will yield a reduction to normal form when possible whereas a perpetual strategy will yield an infinite reduction if possible.
+*** Parallel redex
+No redex is contained in another redex. By contained we mean that a redex is in the body of another redex. 
+*** Outermost redex
+A redex occurrence that is not contained in another redex. All outermost terms are parallel. You can look at the term tree and the one at the top is outermost. Every term not in normal form has an outermost redex and has a unique leftmost-outermost redex.
+*** Innermost redex
+Does not contain another redex. once again, all innermost redexes are parallel.Every term not in normal form has an innermost redex and has a unique leftmost-innermost redex.
+*** Call by value
+Reduce the leftmost-innermost redex in every step.
+
+* Lecture 4
+** Normal Form
+Where all sub-expressions of a lambda expression has been evaluated. It is fully evaluated, and no sub-expression can be evaluated any further
+** Weak head normal form
+Where only the outermost part of an expression has been evaluated and not all other sub-expressions have been evaluated. Every normal form is also in WHNF, but not the opposite.
+
+Haskell likes this form because it can use it to deal with potentially infinite structures. The beginning of the term is stable and it can lazily evaluate down the term tree as it needs 
+** Expressive power of lambda calculus
+Lambda calculus is turing complete, thus everything that is computable is definable in pure untyped lambda calculus.
+*** Defining boolean terms in lambda calculus 
+We need to find two different terms, one for true and one for false. These need to be not beta-convertable, i.e. you cannot get from one to another in a finite amount of beta reduction steps. 
+
+These terms need to be closed, i.e. no free variables.
+
+true: $\lambda x.\lambda y.x&$. Returns the first, erases the second.
+
+false: $\lambda x.\lambda y.y&$. Returns the second, erases the first.
+*** Defining natural numbers in lambda calculus
+Similar to the idea of booleans, however this time rather than 2 terms we need to find infinitely many terms.
+
+We must define a successor function, which takes as input a natural number and returns the arg + 1
+* Lecture 5
+** Lists in lambda calculus
+Idea: lists are formed by repeatedly forming a pair, i.e. [1,2,3] is (1, (2, (3, nil)))

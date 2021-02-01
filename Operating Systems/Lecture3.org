@@ -1,0 +1,52 @@
+* Signals
+ implement os abstractions to send notifications to processes
+** processes can have signal handlers
+* Pipes
+pass the output of one command to the input of another
+** named pipes can be created with the mkfifo
+this doesn't write to disk and is generally faster than doing so
+* Processes
+a program in execution, a fundemental os abstraction. the os maintains info on the resources and the state of every process.
+** os responsibilities with processes
+*** resource allocation
+*** resource accouting
+remembers how much resources a process is using
+*** resource limiting
+"no process should use more than 1gb of ram"
+** info associated with a process
+this is stored in a process control block
+*** pid, uid
+*** memory info
+pointers to text, data and stack
+*** hardware registers
+*** open files 
+*** signals
+*** others, there are many and is implementation dependent
+** concurrent processes
+processes should be mutally independent, they should have explicit means to interact with each other. however, the os offers no guarantees for timing and ordering.
+*** process switch
+done by the scheduler 
+save the process context, aka the program counter and registers of a specific process. when the process is run, we switch to its context. the process switching is done by some timesharing mechanism, implemented by the OS.
+**** interrupt handling
+we need sometimes to deallocate the cpu so that the scheduler can use it. an example of the is SYSCALL. can have exceptions, e.g. SEGFAULT
+** processes hiearchies
+os creates an INIT process and subprocesses are forked off of that.
+parent proccesses create child procceses. results in a treeish structure. process groups are subtrees with a parent process as the root. 
+** management
+*** fork
+creates a new process that is a clone of the parent
+*** exec
+execute a process
+*** exit
+process terminates when it wants to and sends exit code to parent
+*** kill
+sends a kill signal to a process or process group. can result in termination wether the processes like it or not.
+** states
+the os needs to keep track of these to allocate cpu time 
+*** running
+the process is running (duh)
+*** ready 
+process is ready to run
+*** blocked
+process is waiting for resources, eg doesn't have enough memory or needs some input
+

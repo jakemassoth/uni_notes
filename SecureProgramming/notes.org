@@ -1,0 +1,476 @@
+#+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-readtheorg.setup
+* Lecture 1
+** Goals
+   "so that you know how to write a secure program"
+*** Application Security
+Knowing how hackers work, how they abuse vulnerabilities. How we can write programs to mitigate this.
+*** Cryptography
+Mostly mathematical basis, how to protect data on a more abstract level.
+** Definitions
+*** Information security
+presentation of confidentiality, integrity, and availablility of information.
+**** confidentiality
+Not leaking any sensitive information
+**** Integreity
+Bad guys aren't able to change any data
+**** availability
+Bad guys can't make the system unavailable for end users.
+*** Security
+Protecting systems against "deliberate attackers". Different than reliability, which can happen without a deliberate attacker. Goal is to protect the CIA properties. 
+**** Threat model
+Specifies exactly what an attacker can and cannot do.
+** Case studies
+*** ILOVEYOU
+very simple worm that spread through email. used a vbscript which was run when the "loveletter" was opened. It would corrupt files and send to everyone in your address book.
+**** Security problems
+exploited user curiosity. Problems with users are sometimes more common than technical issues. attachment was executed without warning, user might not understand that a vbscript was different than a text file.
+**** Threat model: Script kiddie
+An attacker who doesn't have deep knowledge of computer systems can perform script based attack due to arbitrary execution on a user's behalf. 
+
+impact: loss of all CIA properties. 
+*** Heartbleed
+affected openSSL which webservers need to to secure https. Allowed attackers to get crypotgraphic key. There was a 2 year window between when the bug was discovered and when it was published and fixed. for 2 years, websites were vulnerable but no idea if they were attacked.
+
+Core of the problem was that C is an unsafe language. Relies on the programmer to check bounds as it wants to be as fast as possible.
+
+Requires a skiller hacker, can't just be done by a script kiddie. You must make the correct input to get the required information without crashing the program which would be noticeable. 
+
+impact: loss of confidentiality. 
+*** DDOS attack on Dyn
+Dyn is a company that provides dynamic DNS. On the 21st of october 2016, Dyn got a lot of requests. It is used to getting a lot of requests as it is a big company, but this was really uncomparable to the normal amount they get. Big websites such as twitter became inaccessible. Known as a distributed denial of service attack. Server is so overloaded that there is no way to service the legitimate requests. 
+
+Was performed by a botnet of embedded devices. Many of these devices have default password and the Mirai malware tried common ones.
+
+impact: Loss of availability. 
+
+pretty easy to do, you can rent botnet nodes on the black market and once you have these the attack is trivial.
+*** Stuxnet
+One of the most complex malware known. could spread over internet and USB devices. Spread to industrial devices in particular. Malware was harmless on most computers, would only activate if there was a certain combination of hardware and software found on the system. It changed how fast nuclear centrifuges spin to damage them. targeted nuclear enrichment plants in Iran. It was so robust and must have cost a lot of money to make, it must have been done by US and/or Israeli secret services.
+**** Zero-days
+A bug that is so catastrophic that when it is found out, the manufacturer has 0 days to fix it.
+
+Stuxnet abused a lot of zero day windows bugs.
+**** Rootkit
+OS doesn't know about code that is inserted
+
+Stuxnet utilised this.
+** Threat model
+Defines what an attacker can and cannot do. A system is secure if CIA cannot be violated within the threat model.
+
+For example, we don't always need to defend against an attack who has physical access as this is not always possible. However, if your system is available over the internet you do need to protect against this. 
+** Security is hard
+Attacker needs to find a single weakness, however the developer needs to mitigate ALL weakness which is impossible.
+
+Its also hard to convince managers as security can cost a lot and make systems less user-friendly.
+
+Hard to measure, you can't say "This system is 10 secure"
+
+Applies at many levels.
+* Lecture 2
+** What can go wrong
+*** 3 types of memory
+**** Stack
+Stores local variables that are not static, lives inside a function. TOS pointer works by moving the pointer rather than deleting the value from memory.
+
+Functions reserve stack frame when called. Stack frame stores params, local variables, return addresses, frame pointer, other temp storage
+**** Heap
+stores memory allocated using malloc or new, memory is mangaged by the programmer
+**** Global memory
+stores global and static variables
+** Terminology
+*** Fault
+An incorrect step, process or data definition, basically a bug
+*** Error
+The difference between an observed value and the expected true value, basically saying a corrupted state
+*** Failure
+inability of a system to perform its required function. Basically we broke it
+*** Vulnerability
+A bug with a security impact
+*** Exploit 
+An input that triggers a vulnerability
+
+Types of impacts:
+**** Denial of service
+interruption of availablilty
+**** Privilege escalation
+breaking confidentiality or integrity. 
+
+Usually we are most concerned with this one, cause programs can be restarted. 
+** Classes of vulnerabilities
+*** Memory errors
+When programmers manage memory themselves, they can make mistakes resulting in incorrect memory accesses. Buffer overflow is one example of this. Also unitialized variables can be used to leak sensitive data.
+
+Often hard to find a prevent.
+*** Authentication errors
+authentication works under the assumption that only the correct user knows the username and password. example: default usernames and passwords on routers.
+*** Authorization errors
+applications often require determining which users can access certain resources. example: a path traversal vulnerability where an attacker can access any file on a filesystem
+*** injection vunerability
+Happens whenever a program builds code that can be executed. Attackers can inject something into this code. Requires careful input sanitization. 
+
+If some symbol has special meaning in your language, you must drop any input that has it or escape it properly
+*** Race conditions
+Hard to spot, a situation where the timing of simultaneous operations can result in different execution.
+*** Side channel
+Attackers can get information of a system by observing unintended differences.
+
+i.e. attacker can watch the execution time of a function to determine if a user exists or not.
+*** Unsecured communication
+We must assume that network data can be intercepted and stored data may be leaked. So we must use crypto
+*** Users
+I.e. phishing, scams, social engineering, malware, weak passwords. Users will ignore security policies. Users have poor awareness of trustworthiness of the information they see.
+*** How do we prevent this?
+Consider sercurity when designing software
+
+Conservative programming practices
+
+Using the right tools
+
+Setting policies
+
+Crypotography
+* Lecture 3
+** Programming languages
+Certain programming languages make vulnerabilities more or less likely
+*** Safe languages
+safe languages provide features in the compiler to reduce programmer mistakes, however come with a performance hit
+
+Safe languages do their remaining checks at run time. This introduces an overhead.
+
+Safe languages are not suitable for performance critial code, low level code, real time systems (performance less predictable), legacy code (if we write old code in a safe language, we could introduce new vulnerability. 
+
+Sometimes it is possible to write code in a combination of unsafe and safe code, writing a small performance critical section in an unsafe language. 
+
+Safe languages do not solve all your problems, you still need to program securely
+*** Unsafe Languages
+Unsafe languages trust the programmer to know what they are doing
+
+Both safe and unsafe languages check things at compile time, generally depends on type system. When compiler is unsure, an unsafe compiler will allow it. A safe language will error or add a runtime check.
+*** Formal verification
+Uses a formal mathematical proof to specify that the program is correct. However, it assumes that your cpu, compiler, etc is also correct
+
+Typically uses functional languages. 
+
+Takes a long time. 
+
+It is most suitable in a simple systems where security is a matter of life or death
+
+Techniques are very different than the ones used in Secure programming.
+** Secure software design
+*** Simplicity
+Number of bugs is generally proportional to the complexity of your code. Less code means more security as there are fewer places where you can make mistakes
+
+To achieve this, you must be critical on the number of features you want to add. Rarely used features are poorly tested and could introduce vulnerabilities. 
+*** Attack surface
+The part of the code where untrusted data is processed. The parts behind the attack surface can not be directly attacked without compromising the attack surface
+
+Use few interfaces and check as soon as possible.
+
+Everything exposed is part of the attack surface. Remove these parts or restrict access unless it is strictly necessary. 
+*** Compartmentalization
+E.g. client, server, worker. each of these compartments are isolated. Full validation can be added at each compartment. 
+*** Principle of least privilege
+Every program and privileged user of the system should operate with the least amount of privilege needed to complete its job.
+*** Secure defaults
+Most users will not change default passwords/usernames, so we can make sure that defaults are as secure as possible.
+*** Defense in depth
+In software we can make many components and arbitrarily add them together. However, this means that we can "stack" attacks where many parts of the system is compromised. Thus we must implement security at each layer. We must prevent attacks using multiple techniques. 
+*** Order of operations
+Use locking when there is simultaneous access.
+*** Authentication policies
+Authentication establishes the identity of a user. Typical approach is username+password which operates under the assumption that the correct user knows the correct password. 
+
+Passwords are generally hard to remember but easy for computers to guess. Users can also be mislead using phishing or social engineering to find out their password. 
+
+For security, you should provide users with good advice on how to pick the right password. you can also force high password entropy. 
+
+Avoid leaks using crypography, avoid brute force using lockout policies. The number of attempts depends on entropy. Ensure a safe password reset feature to end the lockout. 
+**** Password strength
+THERE WILL PROBABLY BE AN EXAM QUESTION ABOUT THIS
+
+Base 2 log of the number of bits is password entropy 
+
+For example a pin code: 4 digits, $10^4$ possibilities, $\log_2 10^4 = 13.3$. Therefore there are 13.3 bits of entropy. 
+**** Multi-factor authentication
+Use 2 or more independent factors to authenticate a user. far more secure than just a password.
+
+Can use a seperate device, something user knows (another pin), or something user is (bio, fingerprint)
+* Lecture 4
+Aims to allow secure communication.
+
+Terms: Eve - Evesdropper, Mallory - a more powerful attacker who can do anything to the message
+
+In a generals comunnicating analogy, the generals want to communicate sensitive battle instructions without a captured messenger revealing the information. We need to make sure that the "messenger" doesn't know what the message is, only the "generals"
+** Goals
+*** Confidentiality
+Eve cannot read alice's message to bob
+*** Integrity
+Mallory cannot alter alice's message to bob without him finding out/
+*** Authentication
+Mallory cannot convince bob that she is Alice. If no authentication, no integrity
+*** Non-repudiation
+Mallory cannot deny that she was the one who sent a message
+** Terminology
+*** Plaintext
+The readable text to be transmitted
+*** Cyphertext
+The unreadable text actually sent
+*** Encrytion
+Plaintext $\rightarrow$ cyphertext
+*** Decryption
+Plaintext $\lefarrow$ cyphertext
+** Kerchoff's principle
+You must separate the algorithm from the key. We have to assume that the algorithm is public and the attacker knows it. You can't invent your own crypto and hope that no one will figure out your algorithm.
+
+The opposite of this is security by obscurity. This relies on the keeping the algorithm secret, which is a bad idea.
+** Building blocks
+** Symmetric Crypto
+** Asymmetric crypto
+AKA public key encryption
+
+Uses two keys to offer integrity, authentiction and non-repudation.
+
+One public key, i.e. for a user bob can be used to encrypt a message for him. Only bob knows the private key to decrypt the messages.
+
+*** RSA
+Older and most widely used asymetric crypto scheme
+
+Bob generates a public key $e$ and private key $d$. Anyone who wants to send a message to bob must know $e$ and $d$ must be kept secret. 
+
+There is an encrpytion function $E_k(m)$ for any key $k$ such that $E_d(E_e(m)) = m$. We generate a large number $m$ (i.e. 1024-4096 bits). We then have a public key $e$ and private key $d$ such that $(n^e)^d = n (mod m)$ for any $n$
+
+Computing $d$ from $e$ and $m$ requires writing $m$ as the product of prime numbers. This is a hard problem however quantum computers might be able to do this in the future and this could break RSA.
+**** Sending
+Alice gets Bobs public key $e$. This must be secure as mallory could give a key. Alice can then send a message $m$ encrypted with $E_e(m)$. Bob then decrypts this with $E_d(E_e(m))$.
+** Key management
+** Blockchain
+* Lecture 5
+** Sanitation
+Do it early to mitigate vulnerabilities later. Immediately reject inputs that are not suitable, do not echo the problematic error message
+
+Set reasonable inputs, names don't need to be more than 1000 chars, empty string are often invalid, can cause some trouble.
+
+Ensure strings contain no unexpected characters
+
+Verify integer ranges for overflow
+
+Restrict inputs for a set of values, e.g. country names
+
+However be careful not to overdo it
+*** Implementing
+Apply before parsing. Prefer whitelisting over blacklisting
+
+Data may be escaped, so removing escaping characters could lead to issues. In addition, removing white space can make non-empty strings empty.
+*** Where to sanitize
+Sanitation only on the client side is pretty much useless from a security side as client side JavaScript can be changed. Each compartment (client and server) needs to have checks.
+*** Escaping
+Some sequences of characters have a special meaning in certain languages. We must encode these characters to avoid interpretation by a compiler. This is known as escaping.
+
+Escape rules are more complex than they seems. You must handle all weird edge cases and context. It can result in buffer overflows as it adds characters. Generally better to use a standard library.
+*** Authorization
+We can't assume that a user will specify a resource that they are allowed to access. Thus we must verify permissions on every level.
+*** Intrusion detection
+Validation might not be sufficient for all inputs. Thus we must used heuristics to identify suspicious inputs. Heuristics aren't always perfect, some can allow bad inputs or throw out good inputs. Which of these options is worse is context-dependent.
+
+There are generally many more benign packets than malicious inputs. Thus if you make a heuristic that catches all malicious inputs, but rejects a lot of false positives, this could be a big issue as some users won't get their requests serviced.
+
+**** Precision (how accurate are the matches)
+$\frac{TP}{TP+FP}$
+**** Recall (fraction of malicious cases found)
+$\frac{TP}{TP+FN}$
+**** F1 score, harmonic mean of both
+$2*\frac{precision*recall}{precision+recall}$
+*** Machine learning
+You can poison machine learning algorithms by giving it a bunch of bad data. For example, you can send a bunch of emails that contain spam but with "relevant" words to trick spam filters into letting it in by lowering its threshold.
+** Checking assumptions
+We constantly make assumptions in code. I.e. string hold path that to a file that we are allowed to read, a persons age fits in 3 characters. These assumptions can violate security if violate.
+
+These are okay to make, however we must make them explicit by including checks. In C, we can use assert() to check a boolean value which kills the program if it is false.
+
+Do NOT make any assumptions on untrusted data. This should be validated with a sensible error message if it is wrong. Do not use assert as it can be disabled and validation should never be able to be disabled.
+
+One hard to check assumption is an order-of-operations error. In multithreading, thread interleaving can behave unexpectedly and signals can get delivered and weird times. Can be mitigated using locks somewhat, but always verify system is in the expected state before executing a command.
+** Handling errors
+Errors are an expected part of programming. These are things that we know can fail and we must handle them accordingly.
+
+When handling an error, we must ensure that resources are cleaned up and released. Persistent states must remain consistent. Program must continue to work if possible. Generally you would also want to have some logging/reporting
+
+*** State consistency
+Before returning error code, consider all changes to state and cleanup accordingly
+*** Fail securely 
+Failure should not result in skipping security checks. It is easy for a programmer to forget about code being skipped.
+*** Error messages
+Reporting errors is important, but attackers really like them as they can reveal information about a system. Do not leak detailed info to remote host.
+** Memory management
+Low level languages allow programmers to manage their own memory.
+
+As a high level overview, to program securely in a low level language the programmer must:
+
+- Allocate the right amount of memory
+- Avoid reading and writing past allocation boundaries
+- Initialize memory before reading it
+- Read data from memory with the same type as it was written (i.e. no invalid typecasts)
+- Deallocate to mitigate memory leaks
+- Ensure memory is not reused after deallocation (use after free vulnerabilities can result if you don't do this)
+*** Types of memory
+Global: Stays in place the whole time, allocated by linker for the lifetime of the program
+
+Stack: used for local non-static variables. Compiler does management, no need for manual management. However you have to consider that these variables cannot be used after returning
+
+Heap memory: Must be managed completely explicitly like with malloc. programmer must ensure that the size and lifetime matches the needs of the program.
+
+generally use stack over heap whenever possible (i.e. when it has a fixed size and is a suitable lifetime)
+*** Respecting object bounds
+Some functions do not consider object bounds, such as strcpy. Better to use snprintf() which does secure string formatting and always copies a null terminator. It takes a len arg so you can ensure it won't copy more than you have space for
+
+Avoid functions that don't check buffer boundaries
+
+Verify allocation size is consistent with actual content, aka don't allocate more than you need and also vice versa
+
+Reading out of bounds is also bad, can leak sensitive info
+*** Memory initialization
+Initialize everything at allocation time unless prohibitive for performance (which is unlikely) 
+*** Typecasting
+Try to design your program so that it doesn't need typecasts, but if you must (and are using c++) use dynamic casts which add a runtime check that the cast is possible
+*** Integers overflows
+When integers exceed range of type that they are stored in, result is incorrect
+* Lecture 7
+Testing is critical not just for security but also for corectness. 
+** Regression testing
+Ensures that new bugs are not indroduced in old code when adding new code.
+
+Developed from requirements. For security, we want to include boundary cases as well, i.e. overflows and malformed input
+** Unit testing
+Rather than testing the whole program, we only test parts of it to make sure that we trigger vulnerabilities that might not be triggered if we tried to test the program all at once.
+*** Coverage
+How do we know if we've tested everything? We write tests that follow the most amount of code paths
+
+Can be measured as the number of lines executed, number of statements executed, number of branches taken
+** Finding bugs
+Higher coverage -> higher possility of finding bugs, however how do we know when we've found them
+
+We can use assertions or memory extensions that crash when 
+*** Address sanatizer
+Crashes when you access an element that is out of bounds
+*** Undefined behavior sanitizer
+I.e. overflows will crash the program
+*** Fuzz testing
+Feed random inputs to the program
+
+AFL is a good example of one. Uses a modified compiler that helps identify paths through the program. 
+* Lecture 8
+Actually performing an attack requires low-level insights
+*** Where to write the return address
+Stack frame is not predictable, so we need to look at the assembly code to fully detect whats going on.
+*** Where do we point the return address to?
+We can only execute code in the same process
+
+We could point it to code that is already in the program or inject code
+**** Injecting code
+x86 cpus do not distingish between code and data, i.e. we can execute "data"
+
+Therefore we just need to get this data into the address space
+
+A good goal to start with is trying to start a shell via injection
+*** Hijacking system calls
+Only os kernel can start programs. We can use a system call with parameters that starts a shell.
+* Lecture 9
+Modern compiler implement several techniques by default.
+
+2 different types: Prevent attacker from corrupting state vs. making corrupted state harder to abuse
+
+** Stack canaries
+Place a value between local variables and return address, check that value after the function returns. If its different, buffer overflow
+
+Similar to "canary in the mineshaft": in that the canary dies when there is toxic fumes. If stack canary "dies" by being overwritten, means that an attack has taken place
+
+Only works if the attacker doesn't know that there is a canary, they could rewrite the canary with the same value. only works with contiguous buffer overflows.
+** Write xor eXecute
+ensure that memory is not BOTH writeable and executable. Requires CPU support.
+
+Thus, it is not possible to inject shellcode.
+
+Can be beat by instead reusing existing code. for example, in C library there is ~system()~ call that takes an arg from ~%rdi~ where we can inject shellcode. This is only really possible on 32 bit systems as all the args are on the stack.
+
+Better way to beat it is return-oriented programming, where parts are chained together. Tools exist to find "gadgets" that you can string together to do complete execution.
+** ASLR
+Randomizes the locations where memory addrs of code, data, heap and stack. Prevents the hacker from finding pointers to overwrite, or knowing what to overwrite with. 
+
+Attacker can still leak addresses or side channels and oracles to find out the memory layout. It only randomizes the base addresses, so if we know one pointer we know them all.
+** Control flow integrity
+Prevents attackers from changing control flow by statically analysing the code and preventing any jump that it did not find.
+
+Attacker can still attack it but abusing the completeness of static checks, and finding ways to use remaining code fragments. Data corruption is also possible.
+*** Fine-grained (full blown)
+indirect branch can only reach targets known to be valid
+
+Most secure but slow
+*** Coarse grained
+Rules are simplified, every indirect call can call any function, but can only reach start of function. Also each return can only reach after crash site
+
+Much better performance
+*** Shadow stack
+Dynamic approach, checks at run time return addresses by storing return address on separate stack.
+
+Fast and pretty secure but only protects returns, not indirect calls.
+** Conclusions
+Generally these things make it a little harder, but attacks are still possible.
+* Guest Lecture
+Most companies don't have a huge budget for security, so they need to pick which vulnerabilities to fix very carefully.
+
+They can do risk analysis to decide which one is the highest prio
+
+** Qualitative vs Quantitative
+Qualitative is kinda flawed as experts can disagree
+
+There are quantitative measures you can use to quantify the risk of a vulnerability.
+** Common vulnerability scoring system
+A framework for communicating the characteristics and severity of software vulnerabilities. 
+
+Goal is to have a shared system of metrics to analyze and measure vulnerabilities.
+
+Based on three metric groups, the one that we will focus on is the base metric group
+
+Rated 0-10, 10 being the most severe 
+*** Base metric group
+relates to the impact on the software as reported.
+
+split into exploitability metrics, scope metric, and impact metrics
+**** Exploitability metrics
+These are measured over the vulnerable component. These are pretty objective
+
+- attack vector
+- attack complexity: Not covered cause its too hard
+- user interaction
+- privileges required
+***** Attack vector
+how the attacker can carry out the attack. Is it bound to the network stack, or does the attacker need to have physical access
+
+Categories:
+- network, attacker can be anywhere on the internet
+- adjacent network, attacker needs to be in the same subnet
+- local, attacker needs access to the I/O of the system
+- Physical, attacker needs to literally have the device.
+***** Attack complexity
+Measures the conditions that must exist in order to exploit the vulnerability.
+
+can be high or low, high means that a successful attack depends on conditions outside the attackers control.
+
+low means that the attacker can expect reliable conditions allowing them to carry out the attack.
+***** Privileges required
+The level of privileges required to successfully do the attack.
+
+Could be high (admin) low (normal user, but must be authenticated), none (anybody)
+***** User interaction
+Does the victim have to participate in some way, i.e. clicking on something 
+
+Could be required or none
+**** Impact metric
+These are measured over the impacted component. Can be subjective. Each one measures the losses suffered by the impacted component
+
+- confidentiality
+- integrity
+- availability
+
+possible values of losses are high, low, none
+#  LocalWords:  exploitability

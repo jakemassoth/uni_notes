@@ -1,0 +1,104 @@
+* Lecture 1
+** Questions
+** Notes
+*** Abstraction
+The principal instrument for taming all complexity. 
+We ignore details *safely*
+creates models, a partial representation of reality.
+*** Models
+Models represent a subject. The consumer is who uses the model to achieve a goal.
+**** Descriptive models
+describe a system
+**** Perscriptive models
+how to implement a system
+*** Development Process
+determine an order of stages involved in developing the software
+**** Requirements engineering
+specify the main features of a system, fragments of functionality. 
+Should be:
+***** Precise
+***** Complete
+***** Consistent
+***** Verifiable
+qualities to be met, characterists that influence the level of quality.
+**** Design
+give shape to a system via models
+not super clear-cut, more of an idea of the system
+not a fixed thing, can iterate through the dev process
+**** Implementation
+self explainatory 
+**** Testing
+** Summary
+* Lecture 2
+** Questions
+** Lecutre Notes
+*** What is UML?
+  unified modeling language. started as way to standardize all oo approaches.
+not tied to any specific development process
+promotes improvement and refinement of models
+all parts of a system can be described using uml
+S C A L E A B L E
+words with descriptive and perscriptive models
+has a very specific description of its semantics
+*** Models != diagrams
+Models contian everything related to system, diagrams will show some parts of the model but not everything.
+*** Class
+a construction plan of the attributes of a specficic part os the system
+**** Binary association
+connects 2 instances of different classes
+can use an xor constraint
+**** N-ary association
+** Summary
+** Reading notes
+*** Intro to SD
+*** UML@Classroom
+A UML model is represented in a digram.
+**** Class Diagram
+models the classes that are in a system and their relationships
+**** Object diagram
+models instances of classes, so it is a snapshot of of an execution time of a program
+**** Package Diagrams
+groups digrams together that share common properties.
+**** State machine digram
+shows the flow of the state when actions are performed.
+
+* Lecture 3
+** Questions
+** Notes
+*** Creating good class diagrams
+**** tends towards having deep classes, less stuff that needs to be known to users, more functionality provided by the class
+private is the default, hide as much info as possible
+do not focus on order of tasks
+push complexity as low as possible in the diagram
+**** Single responsibility principle
+design so that there is only one reason to change a class
+**** Encapsulation
+the act of keeping data and computation close
+
+** Summary
+* Lecture 7
+** Observer Design pattern
+A subject observes an observer. these 2 classes are only implemented once and can be used accross the design pattern. (generic and fixed).
+obvsevers wait for the subject to notify, they don't check the status of it all the time
+*** Design descisions
+**** Inheritence vs Interface
+in inherittence style, concrete implementations of subjects and observers extend those classes. This allows attach() detach() and update() methods to be implemented only once, but concrete implemenations cannot extend other classes.
+in interface style, the observer is an interface, and observers implement that class. subjects have the add and remove observer methods implemented directly in the class. 
+**** Scope of callbacks
+single callback, has only one method call for any change in an observer 
+multiple callback, has different methods for each change in an observer. allows for more control as you can have different behavior for different changes.
+**** Control flow
+You can either have an internal or external call to notify observers
+in an internal call, you have the class iteself call notify(). This means that every time an event happens, all the observers are notified. this could be computatinally expensive.
+In an external call, the notify() command is public so it is up to the client code to call it. Allows for more flexibility in when notifications are done. however, must be implemented in client code. 
+**** Data Flow
+Push vs Pull strategy
+In push, the subject only pushes the new data to observers. good when you only have primitives, has loose coupling as observers don't need to know the internal structure of the subject. 
+In pull, the subject pulls all data to observers. allows for flexibility, as if you need to check other fields you have it. encapsulates as the queries to the subject are done by the subject. however, observers need a reference to the subject, risks reference escaping.
+
+** Visitor Design Patterm
+used when we need to perform an open-ended number of unrelated operations on a set of objects. you can inject an operation into a disparate collection of unrelated classes.
+In each class that you want to visit, you only have to implement an `accept()` method. 
+** Chain of responsibility 
+useful for when you have a service that is executed by many objects. you don't care which object does what and in what order, just that the service gets done. 
+Is essentially a switch statment but you have the power of polymorphism and allows a very plug and play client code.

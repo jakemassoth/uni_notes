@@ -1,0 +1,212 @@
+* Lecture 1
+** Example: parallel primality testing
+We want to print all primes up to $10^10$. If we have a 10 threads, and we want to get a 10 fold speedup, a naive approach would be to split up the values into equal intervals and have each thread take one.
+
+A better idea is to have the threads request values from a shared pool. However this can result in a race condition where threads read the counter and increase it at the same time. Then both threads end up analyzing the same the same number, and the next number is skipped.
+
+We could use mutual exclusion to lock the counter and ensure that only one thread reads and writes to the counter
+
+We could also use a read-modify-write solution where reading and increasing are one atomic step.
+** Mutual exclusion
+A problem where 2 things can not access the same resource at once
+
+Can't be solved by transient communication or interrupts.
+
+It can be solved by multi reader and single writer variables
+** Safety and liveness properties
+Safety properties: something bad will never happen. e.g. mutual exclusion. 
+
+Liveness property: something good will eventually happen. E.g. deadlock free or starvation free.
+** Progress properties
+*** Blocking
+Deadlock free: some thread trying to get the lock eventually succeeds
+
+Starvation free: every thread trying to get the lock eventually succeeds
+*** Non-blocking
+Lock free: some thread calling the method eventually returns
+
+Wait free: every thread calling the method eventually returns (ideal)
+
+These can not be used with blocking methods, and guarantee that the system can cope with crash failures.
+** Producer-consumer
+One thread is producing something, another thread is consuming that thing.
+** Amdhal's law
+Given a job that is executed on $n$ processors. 
+
+$p$ is a number between 0 and 1 that is a fraction of the job that can be parallelized. The part that can not be parallelized is $1-p$. Therefore, the execution takes at least $(1-p)+p/n$. Therefore the max speedup is $\frac{1}{(1-p)+p/n}$
+
+Conclusion: to make efficient use of multiprocessors, you really have to minimize the sequential parts and reduce the idle time in which threads wait.
+* Lecture 2
+** Events
+A thread exhibits a series of events. Events are instantaneous and never simultaneous
+
+$a\rightarrowb$ indicates that $a$ happens before $b$ this is a total order
+** Peterson lock
+flag[0] and flag[1] are multi-reader single writer variables. these are booleans, one belongs to each thread
+
+victim is a multi reader multi writer variable. "I am polite"
+
+i and j are single reader single writer variables. only one thread can write its respective variable and that same thread can read it aswell.
+** volatile varibales
+A value that is very important to multi threaded execution, so its value is always up to date. It is written and read from main memory rather than cache
+
+Out of order execution by the hardware with regard to a volatile variable is not allowed.
+** Filter lock
+for all levels l there is a variable victim[l]
+
+A thread i at level l-1 wants to go to level l, it sets
+*** Doorway
+the lock method can be split up into 2 parts: 
+
+A doorway part which must be completed in a finite number of steps
+
+A waiting part, where you are repetedly reading variables until certain values are read
+*** Bakery algorithm
+Threads take a number that is greater than the numbers of all the other threads. When all the lower numbers have been served, the thread can enter the critical section. although threads can concurrently take the same number and fuck it up. You can have a tiebreaker between the 2.
+
+Doesn't scale well, as numbers can become very large, and for n threads n distinct variables must be read.
+** Registers
+single writer, multiple reader
+
+single reader, single writer
+
+multi reader, multi writer
+
+Theorem: At least n read/write registers are needed to solve deadlock free mutual exclusion for n threads
+* Lecture 3
+** Sequential objects
+*** Why they are awesome
+An object state is only meaningful between method calls
+** Linearizability
+We order method calls in an execution, by associating each of them to a single moment in time. Basically, we pretend that each method call takes an instant.
+
+An entire method is linearizable if each of its method calls are linearizable. 
+** Registers
+Shared memory locations are known as Registers.
+
+A single writer reguster is safe if every read that doesn't overlap with write returns the last written value.
+
+A single-writer register is regular if it is safe if
+*** Single reader, single writer
+*** Multi reader, single writer
+*** Multi reader, multi writer
+* Lecture 4
+** Consensus
+one fundamental problem in distributed computing is to guarantee reliability if processes crash.
+
+Threads need to agree on a decision. Each thread randomly picks a 0 or 1 as an input value and eventually decides for 0 or 1. 
+
+Lock and wait free consensus coincide. Each thread either terminates or crashes. Lock-freeness implies that each alive thread can eventually proceed and decide.
+*** Bivalent and critical states
+A state of a consensus protocol is bivalent if it can lead to decisions 0 and 1. each wait free consensus protocol has a bivalent initial state.
+
+A state is critical if it is bivalent and any move by a thread leads to a univalent state (threads can't lead to a decision 0 or 1)
+
+Each wait free consensus protocol has a critical state, or else there would be infinite execution visiting only bivalent states
+**** Solving wait free 2-thread consensus with a FIFO queue.
+We can put 2 items in the queue: WIN and LOSE.
+
+Each thread writes it value into a multi-reader, single writer register, and then dequeues from the FIFO Queue. If it dequeues WIN, it decides its own value. If it dequeues LOSE, then it goes for the value of the other thread. Now it is in a univalent state. We can see that any move by a thread leads to a univalent state, therefore the state is critical.
+
+It is crucial to write the value to the register first, cause if the thread crashes the other can still read the value.
+
+However, it is impossible to implement a wait free FIFO queue with two dequeuers using only atomic registers. This is the case for most data structures, i.e. stack, list and set.
+*** Read-modify-write operations
+Extremely important
+
+On the hardware level, there is a bus which has a lock. Before a read or write operation is performed, the bus must be locked. A read-modify write operation allows a read followed by a write, while in the meantime the lock on the bus is kept. i.e., it can be implemented that you can assign a value, and return the prior value in one atomic operation.
+
+important operation is compareAndSet(e,u). If the prior value is e, then set the value to u, but if they are different unchanged. Returns a bool of whether the value was changed. 
+
+you prolly shouldn't use them everywhere, cause it can take more clock cycles. it also invalidates cache lines and fucks up out of order operations which improve performance.
+**** N thread consensus with compareAndSet
+If the register initially contains FIRST, and each thread does compareAndSet(FIRST, v), with v and its input value, if true is returns, it decides for v, if false it decides for the value in the register.
+** Universality of consensus
+The wait free consensus protocol for any number of threads can be used to obtain a wait free implementation of any object
+* Lecture 5
+** Caches
+changes in a cache are pooled, and only written into memory when needed.
+
+Cache coherence is that when a thread writes a value in its cache, all of its copies must be invalidated.
+* Lecture 6
+** Monitors
+Objects should manage their own locks. monitors in java are associated with an object. At most one thread may be executing a method of a monitor. 
+*** Provides
+mechanisms to give up exclusive access, signals to other threads
+*** Condition object
+allows a thread to release the lock temporarily by calling await() method. A thread can become awake when another thread calls signal() or signalAll()
+
+Awakened thread reclaims lock, tests a condition and if its doesn't hold, await(). await() should always be combined with a while, not an if
+**** Lost-wakeup problem
+A thread may wait forever without realizing that the condition it is waiting for has become true. 
+
+Condition objects are vulnerable to this problem.
+
+Can be avoided by signaling all threads waiting for a condition (i.e. using signalAll() rather than signal()). Comes with a performance penalty but helps with lost wakeups.
+** Relaxing mutual exclusion
+*** Readers-writers lock
+Allows multiple readers, XOR single writers claiming a lock. 
+
+A thread can only signal or start to await a condition if it owns the corresponding lock. Helps with lost-wakeups
+
+However, if there is a constant stream of readers, the writer can be starved
+*** Reentrant lock
+If somebody holds the lock, they can reclaim the lock.
+*** Semaphore
+Allows $c$ concurrent threads in the critical section
+
+Claim the monitor lock, check if there is capacity based on a counter await if there is not.
+** Synchronized methods
+While a thread is executing a synchronized method on an object, other threads that invoke a synchronized method on this object block.
+
+Also invalidates cache to make sure that the correct values are read from memory.
+
+Has a monitor: wait() notify() and notifyAll()
+
+*** Drawbacks
+1. not starvation free
+2. are coarse grained, entire method call uses the intrinsic lock
+3. can give a false feeling of security, only guarantees safeness on other methods that are synchronized.
+4. may use other locks than one might expect,
+** Barriers
+Problem: A number of tasks must completed by a number of threads before an overall task can proceed
+
+A barrier keeps track of how many threads have reached it. It can be based on spinning or being woken up.
+*** Sense-reversing barrier
+Consists of a counter initialized to barrier size $n$ and a sense field which is a bool. Every thread arrives at the barrier and applies getAndDecrament to lower the counter. If a thread is not the last to reach the barrier, it spins on the barriers sense field (initially false), until it matches the local sense (intially true).
+
+If the thread is the last to reach the barrier, it resets the counter to $n$ and reverses the barriers sense field. Threads resume execution with flipped local sense, so the barrier can be re-used.
+
+*** Combining tree barrier
+uses a tree of depth $d$, where each non leave has $r$ children. This works for at most $r\exp{d+1}$ threads. Each note is a sense-reversing barrier of capacity r. Initially all barriers have sense false. for each leaf $r$ threads are applied.
+
+reduces memory contention because memory acsesses are spread over different nodes. Works well on cacheless architechtures
+*** Tournament barrier
+    uhhhhhhhhhhhhhhhhhhhhhhhhh
+*** Dissemination barrier
+uhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+* Lecture 7: concurrent sets
+** Fine Grained
+split the object up into components who have their own locks
+
+Usually implemented as every node having their own lock in a linked list.
+
+Threads aquire lock in a hand-over-hand fashion
+*** Correctness
+To remove a node, the node and its predecessor must be locked so while the node is being remove, so therefore whena node is being remove neither its predecessor and its successor can't be remove
+
+No nodes can be added between the predecessor and its successor 
+*** Progress property
+uhhhhhhhhhhhhhhhhhhhhhhhhh
+** Optimistic
+search without locks for an element, lock it (always predecessor before successor), make sure it didn't change and then adapt it
+
+It checks whether the first locked node is still reachable from head, and still points to the second locked node. If this check is good, proceed as in fine-grained synchronization. 
+
+Requires much less locking, however each method call traverses the list at least twice
+*** Progress property
+Deadlock free: if the check fails, another thread successfully completed an add or remove (it means that someone else mutated the list)
+** Lazy 
+same as optimistic except elements are marked rather than making sure they didn't change
+** Non-blocking
+avoid locks by using read-modify write operations

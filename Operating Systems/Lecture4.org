@@ -1,0 +1,41 @@
+* Signal Handling
+the kernel delivers signal, stops code, saves context, executes signal handling code, and then restores the context.
+
+** Hardware induced
+eg SIGILL
+** Software induced
+eg SIGQUIT, SIGPIPE
+** Actions
+most can be overridden 
+** stuff saved when a signal is sent
+pushed on to stack. floating point state, registers, signumber and other sig info, address of where to continue after signal handler finishes.
+this allows to to resume the previous state easily. to the interrupted process nothing seems to have changed.
+* Threads
+** we can allow multiple threads per process
+this allows for easier communication between processes.
+** models
+*** threads
+parallel execution, blocking syscalls
+*** single-threaded operation
+** implementation
+threads reside in the same address space of a process.
+need to be able to synchronize
+has its own state
+*** User threads
+typically use a hybrid implementation to get a bit of the best of both user and kernel threads 
+**** pros
+takes less time to switch threads, more scalable, very customizeable as you don't have to deal with kernel.
+**** cons
+requires application-level cooperation, hard to do parallel
+*** issues
+does the kernel know about the threads or do they exist in the userspace?
+variables.
+**** forking
+do we clone all threads or just the calling thread?
+linux only forks one thread
+**** signals
+do we need to send the signal to all threads or just the relevant one?
+**** race conditions
+if processes are sharing data, they can finish in weird orders and cause unexpected behavior. we need to use mutual exclusion, no 2 processes can be in a critical region. a critical region has acccess to shared resources.
+
+

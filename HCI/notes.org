@@ -1,0 +1,287 @@
+* Introduction
+** Why important?
+- How people use computers is based on how the interface is designed
+- We interact with systems more than we think, i.e. doorbells and stuff. it is part of many "traditional" devices.
+- impacts what we can do with products and services
+- safety
+- essential to what we feel and experience while using technologies
+** Why improve usability
+- productivity, fun, reduce cost, improve sales
+** Visible innovation
+- often things are not seen as problems until there is a solution
+- solutions can seem obvious once implemented
+** definition
+- the discipline concerned with the design evaluation and implementation of interactive systems.
+* Basic terms
+** Interactive system
+A computational system that allows the user(s) to exchange info between the user(s) and the system.
+** User
+A person who interacts with a system, product or service
+*** Context of use
+the combination of users, goals and tasks, and environment
+** User interface
+The part of the system where the user interacts with a system.
+
+supports input and/or output
+** Usability
+Relates to the question of quality and efficiency
+*** Learn ability
+how easy is it to accomplish basic tasks
+*** Effienceny 
+once learned, how quickly can tasks be performed
+*** Memorability
+after not using for a while, how quickly can users re learn system
+*** errors
+How many errors do users make and how serious are they
+*** Satisfaction
+how pleasant is the system to use
+** User experience
+influenced by context of use, product design, users skills and expectations.
+* User's needs
+** Maslovs theory of human motivation
+- physiological needs
+- safety
+- esteem
+- self-actualization
+
+Lower needs must be satisfied before higher needs can be met.
+** Task artifact cycle  
+- Requirements -> artifacts -> possibilities -> tasks and loop back to beginning
+
+By using a technology our needs will change 
+
+- e.g. innovation of a car changed how we design our urban spaces.
+- in 1990 no one would have seen the need for whatsapp or instagram
+** Conflicting users needs
+- users want a free service, but also a privacy centered service
+*** What do people desire?
+what does the market want
+*** What will sustain a business
+is it profitable
+*** What can we build?
+Is the technology even there to build such a product?
+
+If all these requirements are met then a product can be built
+* Human Centered design
+user centered design and human centered design are interchangeable
+
+** Principles
+*** the design is based on an explicit understanding of users, tasks and environments
+know the users and stakeholder groups, how are they related, the goals of the users.
+
+technical environment: hardware, software, materials
+
+Physical environment: lighting and other stuff
+
+Social environment: 
+*** Users are involved throughout the design and development
+*** the design is driven and refined by user-centered evaluation
+*** The design should address the whole user experience
+*** The design team includes multidisciplinary skills and perspectives
+** Activities
+*** Understanding and specifying the context of use
+what are the tasks or objectives associated with the design? this is where the human centered design process is planned.
+*** specifying the user requirements
+what expectations or requirements must the design accommodate?
+*** producing design solutions
+prototyping and shit
+*** Evaluate
+conduct testing and stuff
+** Problems
+users might expect disadvantages
+
+users may have conflicting views on what to do
+
+users might be wrong
+
+users might be resistant to change
+* Qualitative research methods
+Enables us to understand complicated parts of the user experience, we often need to study things we can not quantify.
+
+Focuses on the understanding the activity rather than how good the system is
+
+** Choosing a method
+*** Factors
+- What is the research question?
+- What stage of the design are we in
+- The user group
+- access to users
+- time available
+*** Interviews
+**** structured Interviews
+less context information, easier to analyze 
+**** semi-structured interview
+**** open interview
+depends more on the skills of the interviewer to ask the right questions
+**** Pros
+- simple and practical way of getting data that you can't observe
+- High validity
+- Complex questions can be discussed
+- easy to record
+**** Cons
+- depends highly on skills of interviewer
+- interviewer might accidentally influence answers
+- difficult to analyze and generalize
+*** Focus group
+an informal gathering of 6-12 people. focuses on a specific topic in a group conversation. 
+**** Selecting people
+- do not set up a group where every has the same views
+- diversity is useful but don't go overboard
+- don't mix people with very opposite views
+- could have different focus groups to get information from different angles
+**** Organizing
+- plan a location and time slot
+- 4-10 open ended questions
+- set question that allow group dynamics and spontaneity
+- unobtrusive audio/video recording facilities
+- moderator keeps the group focused and the discussion moving
+**** Pros
+- wide range of in depth information
+- good at gaining consensus view and highlighting areas of conflict
+- possibility to explore related topics
+**** Cons
+- sampling is not random
+- sampling is not representative
+- moderator plays a significant role and can influence results
+- can be dominated by individuals
+- not possible to get quantitative info
+- findings are hard to generalize
+** Ethnographic studies
+Methods to observe humans in social settings and activities
+
+aims to reveal implicit knowledge by observing
+
+observe potential users over a period of days or weeks
+
+*** Approaches
+**** Paper and pencil
+- cheap and easy
+- make structured observations
+**** Audio/video
+- still cheap and easy
+- creates lots of data could be hard to analyses
+- good for review with the user
+**** Computer logging 
+- reliable and accurate
+- limited to actions on a computer
+**** User notebook
+- who wants to write a diary
+** Contextual inquiry
+The designers interact with the users, however less rigorous, possibly biased
+
+* Communicating design requirements
+** Personas
+Fictional characters that communicate the needs of the users. Allows designers to not design for the average user. personas are representative of the target audience
+** Scenarios
+A written story on a person that explains how they will use an interactive system
+
+Can also create a storyboard, which is the same as a storyboard but in a visual comic style.
+
+* Prototyping 
+A concrete representation of a part of all of an interactive system
+** Horizontal and vertical prototypes
+horizontal: The feature spectrum without implementation
+
+vertical: demonstrates a specific feature
+
+** Low-fidelity and high fidelity prototypes
+low fidelity: 
+used to check ideas and information flow. fast, easy and cheap. generally no functionality
+
+high fidelity: looks and feels like the final product.
+* Wizard of oz implementations
+an invisible wizard is controlling parts of functionality. we implement easy parts but leave the hard part to the human operator.
+* User interface technology
+* Visual output technology
+** Considerations
+- pixel density
+- resolution
+- color depth
+- refresh rate
+** Large screens
+generally easier to direct your gaze rather than bringing windows to the front
+*** Issues
+finding mouse cursor, moving mouse
+** 3D content
+all 3D graphics are visualizations
+
+real 3D requires an image for each eye
+** AR
+visual display rendered in a physical scene
+
+requires tracking of the user and environment.
+* Tactile output devices
+** Force feedback
+An active force provided by the device
+* Input technology
+** Input taxonomy
+*** Continuous vs discrete
+e.g. mouse is continuous, button is discrete
+*** Agent of control
+how is the device operated
+*** What is being sensed
+position, motion pressure
+*** How many dimensions are being sensed
+** Transfer functions
+** Potentials of eye gaze based interaction
+* Experimental methodology
+** Why we conduct experiments
+Scientists want to understand cause and effect to be able to make predictions
+
+in HCI: we want to test hypothesis
+
+We could just observe users interact and collect data, but this is not sufficient. Experiments are probably the only reliable means to find the answer.
+** Methodology
+*** Confounding variables
+impact the dependent variables. Can be controlled by randomization, recording the confounding variables
+** Between group design vs in group design
+In between group, we split a randomly selected sample and split them into 2 experimental groups. This has less chance of practice or fatigue effects.
+
+In within group design, participants are assigned to all conditions. this could result in participants fatiguing.
+* Descriptive statistics
+** Nominal data
+categorical, operations A != B, A == B
+** Ordinal data
+There is an order or ranking with the items in the set
+** Interval scale data
+zero point is arbitrary, equal intervals = equal differences
+** Ratio scale data
+Fixed zero point
+** Parametric Data
+usually more powerful, normally distributed interval or ratio data, amount of variance is roughly comparable
+** Measures of central tendency
+reflects on the middle or central part of a distribution
+* Inferential statistics
+* Predictive models
+** Fitts' law
+Predicts movement time for rapid aimed pointing tasks
+
+Describes the time to acquire a target is a function of the distance to and the size of the target and depends on the particular pointing system.
+** Steering Law
+describes the movement time of a pointer through a 2d tunnel. The time to acquire a target through a tunnel is a function of the length and width of the tunnel.
+** Hick's law
+The time needed to make a selection is proportional the log of number of alternatives given. Does not apply if its a linear search. Only applies if the user can search by subdivision.
+
+* Essay Outline
+** Introduction
+*** goal
+to start and maintain an exercise routine
+*** benefits
+motivates users to lead a healthy lifestyle
+*** user group
+beginners to fitness, people just starting out
+*** other potential stakeholders
+health insurance companies, employers, etc
+*** environment
+gotta find slides on this
+*** all functionalities
+- users earn bones for 10 minutes of activitiy
+- earning achievements results in special items for scooby
+- scooby communicates his mood through animations and is interactive
+- social features
+*** similar apps
+zombies, run!, sweatcoins, other data driven apps like strava
+*** Design process
+started with horizontal wireframe prototypes, moved on to an html/css prototype. used the iso? standard for design activities, understanding and specifying the context of use, specifying user requirements, producing design solutions. choice of input and output technology was because in our interviews phones seemed to be the best (need more hci theory here, maybe large/small buttons?)
+*** Research question
+Does a non numerical approach lead users to exercise more days consistently than a numerical approach?

@@ -1,0 +1,344 @@
+* Lecture 1
+** Project
+implementing the basic linux networking calls
+
+implemented as a shared library, the calls will go to your library rather than the linux kernel
+** The layered model
+*modularity*: layered architecture where one layer provides service to the next one. It achieves this by adding headers to the packet.
+
+*** Socket interface
+How applications can use the network API. It is a file descriptor, follows the UNIX everything is a file philosophy. 
+
+It is a very successful abstraction. applications only have to manage what to send and where to receive. 
+** Transferring data between NIC and end-host
+packet is copied first on to the NIC, it has a small amount of memory.
+
+one strategy is to have the cpu copy it over, but this is a waste of cycles
+
+A better way is to use DMA (direct memory access) where there is a DMA on the NIC, so the NIC can do the copy from its memory to the DRAM. However, the cpu has to tell it which addresses to copy it to. The NIC still has to interrupt the CPU to tell it it has data. This can result in livelocks if there is a bunch of data coming in all the time. This is known as an interrupt storm.
+** Scatter-gather
+You can scatter the headers all over memory, and tell the NIC where it is in memory and the length. This is more efficient than copying headers and data over on every layer down the network stack.
+
+* Lecture 2: Networking concepts
+** The unit of processing
+Application calls the send() call to the kernel
+
+What is the largest amount of data you can transmit in a single send() call? Related to the size_t type, so 8 bytes on a 64 bit linux machine
+
+
+*** Loop count
+As you go down the stack, each layer will have a different unit amount, so they will have to loop whatever amount of times to send the whole data stream.
+
+the number of times you execute this loop depends on the number of units at each layer, each loop will have an associated overhead.
+
+so there might be a high limit on send(), but its not always a good idea to send a huge amount of data at once if you can avoid it.
+
+*** MTU: Maximum transmission unit
+Defines how big a frame at the link layer can be
+
+ipv4 specification excepts that any l2 layer to be able to support at least 576 bytes of data
+
+A small mtu means that you can have more fine grained multiplexing, however its inefficient 
+
+A large mtu means that you don't need to transmit less packets but introduces delay for the next packet which is known as link hogging, also if the data gets corrupted its a pain in the ass to transmit the whole packet again.
+*** Jumbo frames
+Ethernet is limited to an mtu of 1500 bytes, which introduces a lot of overhead, i.e. over a 1Gbps link it can only transfer 943Mbps. Jumbo frames are a solution. It reduces overhead and increases throughput and efficiency, but it needs supports from NICs, switches, routers and can introduce delays and multiplexing issues. Only really used in data centers, not on the internet.
+*** Cutting up packets
+Each layer has a different mtu, so packets have to be cut down to 1500 bytes for ethernet support. luckily IP has fragmentation support. Uses headers to tell the next layer how to assemble the packets. TCP can also do this with sequence numbers.
+** Implementing stuff in the NIC
+key: there is a difference between the tcp protocol and the bsd socket implementation and its semantics. when you are using sockets, you never need to know if you are using tcp or not
+*** TCP Offload
+bascically implement TCP in the NIC rather than in the host networking stack
+
+People thought it was a dumb idea because TCP "protocol" processing was cheap, however this was only the header processing. however, the kernel still has to handle the socket abstraction which has a lot of overhead. The tcp offload engine also had to interface with the cpu somehow, and this resulted in another bottleneck. 
+
+Also, programming hardware fuckin sucks, and if there is a bug, who is at fault
+
+Also had a really limited market
+*** Stateless offloading
+There is no state that a processing needs to remember, so each packet can be processed independently
+*** Stateful offloading
+What you do with each packet depends upton some state, so if you do TCP offloading you need to maintain the TCP state machine in hardware, which once again, fuckin sucks
+* Lecture 3
+** The device interface: ring
+NICs and device drivers use a circular buffer to read and write data. Which one is producing/consuming data depends on whether you are transmitting or receiving. 
+
+** Struct_net_device
+"This whole structure is a big mistake"
+
+Contains functions for all device i/o activities
+
+its a THICC structure
+** NAPI
+New API
+
+the implementation of interrupt mitigation technique 
+
+** Preemption vs priority
+** Socket Kernel Buffer
+A super complicated super import linux struct
+
+* Lecture 4
+** Moores law and networking
+CPU single core performance is not progressing at the same rate that ethernet speed is anymore. CPUs got more cores, so focus turned to multicore speedups. Now, CPU performance has stagnated a bit so the focus is on speciliazation
+** Manycore scalability
+We can use multiple rx/tx rings, one for each cpu core
+*** Assign packets randomly
+works, but poor locality
+*** Receive side scaling
+NICs distribute packets by applying a filter that assigns each packet to a logical flow
+*** Receive packet scaling
+RSS that works on the software side, much more control and can be used by any nic.
+*** Receive flow steering
+look up which core to schedule packet processing based on which core an application is running on
+*** XPS: transmit packet steering
+When you transmit data, you are generally expecting an ACK, so you need to choose the transmit queue with the receive queue in mind. Generally better to choose a cpu core that is close to yours for better mapping
+* Lecture 5: Userspace network stacks
+** Packet processing frameworks
+Applications that operate on raw packets, make decisions on a per-packet basis
+
+Better than using a switch as they can be expensive, hard to use and not flexible
+
+Less bandwidth, more volume, so stress is on per-packet cost.
+** Netmap:  A novel framework for fast packet i/o
+Key problem: There is no high-performance, safe, flexible way of getting access to raw packets
+
+The root cause of high overheads is the sk_buff struct in linux, it has a gazillion variables and its 232 bytes. If there is a 64 bytes packet, the overhead is 80%. Another root cause is system calls, which are not cheap as they trap the kernel and disrupt ongoing processing.
+*** Packet presentation
+Packet size is fixed at 2kb
+
+One queue per core
+*** Zero-copy stack 
+Raw packets are built and queued into rings from userspace. System calls are only used to notify NIC that there is stuff in the queue. To achieve this, the NIC driver needs to have a multi queue interface.
+** DPDK Architechture
+Direct user space packet processing, doesn't do system calls, is able to bypass the kernel and directly access the NIC.
+
+Trying to totally rebuild the linux networking infrastructure for fast packet processing.
+
+its pretty fuckin fast
+** mTCP
+TCP stack in userspace
+
+Leverage packet processing frameworks to deliver performance via multi-core scalability
+* Lecture 6
+** Latency
+Optimizing latency requires you to think radically different than when you optimize bandwidth
+
+Many web-scale data center workloads touch many servers
+** RDMA: Remote direct memory access
+No remote application/os/cpu involvement in data transfer 
+
+All buffers are known up front to everyone in a data center. 
+
+WRITE specifies which local buffer data should be read from, which remote buffer to write to
+
+READ specifies which remote buffer the data should be read from.
+
+Allows for a lot more control over the process
+
+
+"Technology" to enable high-performance, low latency network operations
+
+Has its own API and abstractions, important to distinguish the network protocol from the API
+
+*** Objects
+Has a few objects that expose what is actually happening in the network to the application
+*** Key RDMA things
+broadly speaks to the idea of the capibility to read remote memory without remote os involvement. obviously you can also send data like this
+
+There is no one rdma api like socket. lots of different people have different apis, however OFA has been trying to push a semi-standardized stack
+
+RDMA is independent of the networking tech
+
+RDMA can be implemented in software, providing a full api but limited performance gains cause you won't get os and cpu bypass
+
+*** Where do the performance gains come from?
+Closer application-network integration 
+*** Challenges
+Debugging: logging is hard
+
+Performance: takes a while to get used to new way of writing code
+
+Fragility: small ecosystem
+
+Scalability: memory buffers that an rnic can remember is small
+* Lecture 7: Software defined networking
+** Link layer
+Does error detection, frame splitting
+*** Parity check
+Even parity scheme includes one parity bit and chooses its value so that the number of 1s is even in the frame.
+*** Checksumming
+Treats bits as a sequence of integers and sums the integers
+*** CRC
+Apply polynomial operations on the input bit string
+
+implemented in NIC
+
+Smaller chance of collisions, more computation intensive 
+*** End-to-end argument
+To guarantee the integrity of the message, you should check it at the end host always, however, checking some errors and dropping packets in the link layer can be useful for performance
+** Multiple access protocol
+How do we connect multiple computers? shared medium is preferrable
+*** Principles
+- maximum utilization
+- equal utilization
+- no single point of failure
+- simple to implement
+*** Via ethernet hub
+Uses a hub (physical later device) which replicates signals to all ports except the one that signals are received on
+*** Via ethernet switch
+smarter than a hub, creates segments and forwards frames between segments based on the mac address. No collisions, so no need for multi access or collision detection mechanisms
+
+They learn the forwarding table by storing the source mac of the frame and map it to the receiving interface. these are destroyed after a certain time to make sure they are up to date.
+**** Store and forward vs cut-through
+store and forward: packets are received in full, buffered and forwarded onto the output link. You can do CRC on the packet. Safer but doesn't perform as well
+
+Once lookup is done, packet receiving and sending happen simultaneously. Can't do error checking, but its hella fast
+*** ARP
+arp query: who has the ip x, gimme your mac address
+
+arp reply: thats me, here is my mac address
+
+stuff is cached in an arp table on your machine, so you don't have to ask every time
+*** Redudancy without loops
+You can have infinite packet forwarding if there are loops in your network
+
+Solution: reduce network to one logical spanning tree. If a link fails, just rebuild the spanning tree.
+
+Switches run a distributed spanning tree protocol
+*** Traffic isolation
+Brodcast packets can flood the network, also important for user management.
+
+Solution: VLAN, you can assign ports on a switch and assign them to a VLAN
+** Complexity in networking
+why are there so many different tools and technologies -> we have a lot of things we want to enable, but it still needs to be distributed and autonomous.
+
+Innovation is currently moving a lot faster than adoption, i.e. ipv6 introduced in 1998 but only has 33% adoption right now. mostly due to costs, expensive to update hardware, takes a lot of manpower. 
+
+ability to master complexity is valuable, but ability to extract simplicity is better
+** Control plane abstractions (or lack thereof)
+has a variety of goals with no modularity.
+
+We need abstractions for this, and we should ultimately be able to program the network as we do computers
+*** active networking
+in-band, inject code to be executed on the router within the packet you want to send
+
+out-of-band, inject the code to be executed beforehand, basically makes the whole network programmable.
+** Software defined network
+Control plane is seperate from the data plane
+
+A single (logically centralized) control plane that controls several forwarding devices, the routers basically become switches.
+
+*** Abstractions
+**** You have to abstract a general forwarding model
+Openflow is the current proposal for forwarding in SDN
+
+configuration in terms of flow entries, header and actions are mapped-> match + action
+
+requires no hardware update, only on the firmware, no vendor locking 
+**** Network os is an abstraction for the network state
+Annotated network graph provided through an api
+
+You can basically apply a function to a view of the network to change the config of the whole network1
+**** Network os also abstracts the configuration
+Sometimes you don't want to worry about the global view, abstract the whole network as a black box
+** Network virtualization
+* Lecture 8: programmable data plane
+Network industry trend follows computing industry of dis aggregation, more open protocols and abstractions rather than all proprietary.
+
+Switches can only match on supported packet header fields. This make it difficult to add new protocols due to asic limitations. Developing new asics is a BITCH. 
+** Top down approach
+All network features are limited by the capabilities of asics
+
+A top down approach makes the asic programmable, and then let the code tell the asic what to support
+
+Domain specific processors are not unique, i.e. GPUs and TPUs. Requires having a domain specific language and compiler.
+*** PISA
+protocol independent switch architecture
+
+remove protocol dependencies, you can define whatever protocol you want in the data plane
+
+When a packet comes, parse the header, and then go through a match-action pipeline. Then you can output through a match-action pipeline, and then send to a deparser.
+*** P4
+programming protocol-independent packet processors
+
+* Lecture 10: Cloud Networking
+** Architecture
+Need to find a tradeoff between redundancy and complexity and cost. Most data centers use sort of a tree.
+
+Bandwidth is often the bottleneck in a data center
+** Oversubscription
+Ratio of worst case required aggregate bandwidth among end hosts. Bascially the ability of hosts to fully utilize their uplink capabilities.
+** Fat tree
+Expand the tree topolgy with a fat root to increase the root connectivity
+*** Goals
+- enable scalable interconnection bandwidth, ideally 1:1 oversubscription ratio
+- economies of scale, constant price per port
+- support ethernet and ip without host modifications
+- easy management, modular and avoid manual management. you don't want to manually config a shitload of switches
+*** Topology
+Similar to clos topology which was originally for telephone switches. it emulates a single huge switch with many smaller switches.
+*** Challenges
+Not great backwards compatibility with ip/ethernet because routing algorithms only choose one path between 2 hosts rather than taking advantage of the whole network topography
+
+complex wiring due to lack of high-speed ports
+
+plug and play is not possible, ip addresses have to be pre-assigned
+
+can't do vm migration as ip addresses are location dependent
+*** addressing
+Uses 10.0.0.0 private address block
+
+Hosts: 10.pod number.switch id.host id
+
+Pod switches: 10.pod number.switch id.1
+
+core switches: 10.k.j.i, i and j denotes the position of the switch
+*** Forwarding
+- prefix is used to forward intra-pod traffic
+- suffix is used for inter-pod traffic, used to have many different paths to fully utilise the whole network
+*** collisions
+- Static path between end hosts, Equal cost multi path
+- Having a centralized scheduler, uses SDN
+* EXAM STUFF
+** Unit of processing
+Each networking layer has a different unit, i.e. packets at the TCP level and frames at the ethernet level. If you have to split the packet into a bunch of different units, can add a lot of overhead and result in a high loop count
+
+Per packet overhead:  building headers, ACK generation, state management, stuff you have to do on each packet
+
+Per byte overhead: Data copy, checksum, DMA
+
+Having a large MTU means less packets and thus less per packet overhead, however if it gets fucked up you gotta retransmit a lot of data. A small one means more multiplexing but more per packet overhead. 
+
+calcuating efficiency: payload size/total bytes on the wire
+** Offloading
+You can offload tcp stuff to the nic but can get tricky as you have to program a microcontroller and socket abstraction
+
+Stateless ofloading is where the nic doesn't need to know state to calculate things, such as checksum offloading. Stateful is the opposite which is complicated. 
+
+TCP segmentation offloading is where you offload the segmentation into ethernet frames to the nic
+** SoftIRQ
+A software interrupt that is processed when hardware interrupts exit
+** NAPI
+Mitigates interrupts, process a bunch of packets in one go rather than interrupting whenever one comes in. the device driver is polled until it has enough packets to process.
+** SKB
+represents a data packet in processing. contains the net device, socket, headers, and other accounting
+** Zero copy stack
+Typically data is copied one time from user to kernel buffer. We do this cause the user process can be desceduled at any time and its memory mappings will be invalid while the kernel might still have stuff to do, i.e. retransmission. 
+
+In a zero copy stack, packets are built in user space and transmitted directly. requires support from the NIC
+** Interrupt load balancing
+Typically cpu0 gets all the interrupts. We can try to assign interrupts to different cpus to share the processing
+** multi-queue nic
+Having all the cpus try to read data from the rx queue of a nic results in lots of lock contention, thus we assign one rx/tx to each cpu core
+** NUMA and NICs
+In a numa architecture, cpu clusters have local memory and thus it is important to try to get these clusters to access their local memory as it is a lot faster. 
+** MegaPipe
+A networking abstraction for high performance networks 
+** Packet processing frameworks
+
+** DPDK
+** Netmap
+** Linux netstack vs user space netstacks
+** mTCP vs megapipe
+

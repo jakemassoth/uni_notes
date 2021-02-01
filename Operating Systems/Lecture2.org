@@ -1,0 +1,30 @@
+* Exokernel
+** seperate resource control from extended machine
+** similar to a VM however:
+doesn't emulate hardware. only really does low level resource management. services are offered as a library of the exokernel, not a thing that the exokernel does itself.
+this allows for higher modularity of optimation. we can have as many OSes as there are applications. System calls can get complicated as it is a hybrid architechture. serperate kernel and user space
+* Client-server Model/Microkernel
+** organize operations in seperate processes
+** usually implemented as system server-system drivers
+** system processes talk to each other via message passing
+the system calls rely on this same messsage passing
+** has "multiple rooms" for the different drivers
+means that if a driver crashes, kernel is still chilling
+however, this has a performance hit as this means that the messages have to be passed to different "rooms"
+** each process should operate with the least amount of privilige it needs to complete its job
+means that if there is an attack on a process, the attacker won't have access to other stuff
+** applications don't "talk" to the microkernel
+* System calls
+"everything is a file"
+every process on UNIX starts with 3 files opened: stdin, stdout, stderr
+** standard library 
+libc provides wrappers around syscalls. it calls the syscall instruction using an assembly object
+** x86 syscalls
+*** triggered by special instruction int 0x80
+privilegde is changed to kernel mode. arguments for syscalls are stored in registers and some additional on the stack.
+** x86_64 syscalls
+*** still supports int 0x80
+*** has a new instruction syscall
+uses the same registers for args, but the 64-bit version.
+** in the context of process management
+

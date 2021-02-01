@@ -1,0 +1,216 @@
+* Lecture 1
+** Questions
+What are intelligent systems?
+What are agents and rationality?
+What is the role of the enviornment of agents?
+What types of Agents are there?
+** Notes
+*** ai requires specific knowledge
+Most AI examples require human intervention to train. 
+2 pillars of ai are learning from previous examples and combining with rich human knowledge.
+*** The project
+uses schnapsen
+it can be played systematicically, has many more options of possible games than for example go.
+represent schnapsen as a state space
+search for optimal solutions
+**** properties of schnapsen
+imperfect information, i.e. we don't know where all the cards are like we would in chess
+explicit knowledge is available
+adversarial agent setting
+*** Core topics of IS
+**** search and heuristics
+in chess, we make a tree of all the different possibilities for each move and search down for the most ideal move. heuristics guide our search
+**** Knowledge
+how to represent the specific knowledge we have about games or situations. do reasoning about this knowledge.
+**** adaptivity
+how to learn from past behavior.
+*** IS
+a subfield of AI which focuses on the computer science aspects of AI
+*** Rational agent
+an agent that chooses an action given some performance measure, with some previous knowledge of its enviornment, to arrive at the most possible solution.
+*** agent
+maps perception sequences to actions
+**** types
+simple reflex agents
+model based reflex agents
+goal based agents
+utility based agent
+*** Task Environments
+Perfomance
+Environment
+Actuators
+Sensors
+PEAS
+envoironments can be fully or partially observable
+static vs dynamic
+discrete or continuous
+single vs multi agent
+*** State space search
+representing problems as state space problems and then searching through to find the best one.
+** Summary
+Intelligent systems are systems that use data from their environment to manipulate it. they can be adaptive. An agent is an abstract concept of a thing that maps some perception sequence to an action it performs. The agent's environment can affect what kind of senors and actuators it uses. There are simple reflex agents that simply perform a single action when some given stimulous happens. There are model based reflex agents that have some model of the environment and act like simple reflex agents according to that. There are goal based agents which require a goal to know about the environment.
+the PEAS acronym stands for performane, environment, actuators and sensors which specifies what you need for the design of a rational agent.
+* Lecture 2
+** Questions
+** Notes
+*** Branching Factor   
+a measure that determines the complexity of the problem by looking at how many transitions each state layer has
+*** Basic state search algorithms
+Traverse the tree, choosing a leaf node according to the strategy you have chosen. Add this node to your search tree. If the node contains your goal state, that is the solution. if not, recurse.
+**** BF-search
+Expand the shallowest unexpanded node. The fringe must be implemented using a FIFO queue. It is complete as long as the depth is finite. uses b^(d+1) time and space. Is kind of bad as memory problems can arise.
+**** DF-search
+Expand deepest unexpanded node. The fringe is implemented as a stack. Is not complete. Uses b^m time and b*m space. Is not optimal.
+**** Depth limited search
+Basically a DF-Search but you decide how deep to go with a variable *l*. We can use some problem knowledge to decide what l is. If l<d, not complete as the solution could be after the cutoff. if l>d, not optimal. Uses b^l time in the worst case and b*l space.
+**** Iterative depth limited search
+Use a depth limited search, however we modify the *l*. Every time we exhast all the nodes, we start from scratch with l++. This is complete always, as there is no infinite paths. 
+*** State space vs search tree
+the state space contains all of the states, can get very large. the search tree is only the nodes that you have added according to the state search algorithm. it is built on the fly.
+*** Measuring perfomance of the algorithms
+Completeness, i.e. does it always find a solution if it exists?
+Optimality, does it find the most optimal solution?
+**** Time and Space complexity
+b: max branching factor of the search tree
+d: depth of least cost solution
+m: maxiumum depth of the state space, could be infinity. If it is infinity, the algorithm could run forever.
+*** Search direction
+Data-driven, start with initial state.
+Goal driven, start with goal state.
+We must consider if there is a clear unique goal and which branching factor is bigger to devicde which one to use. 
+** Summary
+In order to find a goal state in a large tree, we can use some basic algorithms. These algorithms performance are determined by the depth of the solution, and the branching factor, which is a measure of how complex the problem is by looking at how many trasitions each state layer has. Another measure of an agorithm is teh completeness, i.e. the algorithm's ability to always find a solution if one exists. In the same vein is optimailty, which tells if an agorithm always find the _most optimal_ solution.
+The most basic algorithm is breadth-first search. It expands the shallowest unexpanded node and adds its children to a FIFO queue. This algorithm is complete assuming that the depth is finite. However, it uses a lot of time and space as the depth goes up.
+A slightly better algorithm is depth first search. It only differs in that the deepest unexpanded node is expanded first. Thus, its fringe must be implemented as a stack. 
+One variation on this algorithm is the depth limited search. We choose some constant *l* using problem knowledge and only go down that far. This elimates the problem of the algorithm never terminating if the depth of a search tree is infinite. If we don't have full confidence in our problem knowledge, we can use iterative depth limited search, in which every time all the nodes are exhasted we incease *l* by one. 
+* Lecture 3
+** Questions
+How can we be smarter about the order of explorations with search algorithms?
+** Notes
+Trees get very large very quickly, we need to have an informed way of exploring the tree.
+*** heuristics
+    finding the best descision with informed search.
+**** Informedness
+a more informed heuristic will generally be better, but generally more expensive to calculate
+*** Best first search
+node is selected for expansion based on an evaluation function. the fringe is a queue sorted in decreasing order of desirability. the evaluation function essentially measures the distance of the goal. It is not complete. Heuristics can guide you into an infinite branch. It is not robust against an endlessly promising heuristic. You must keep track of the whole fringe which could get pretty thicc. one solution for this is to use *beam search*, which only keeps the best k nodes in the fringe.
+*** hill climbing
+basically beam search but k = 1
+*** A
+The evaluation function estimates the cost to get from the given node to the goal and adds it to the cost so far to get to the node. by doing this we try to avoid expanding paths that are already expensive.
+*** A*
+A, but the heuristic never overestimates teh cost to reach the goal. This is known as an *admissible heuristic*. A* is complete and optimal.
+
+** Summary
+
+* Lecture 4
+** Questions
+What do other agents do and how do they affct our success? 
+** Notes
+*** Multi agent settings 
+Introduces uncertainty as we do not know what the other player is going to do. This uncertainty is not like a random chance, but the agent will try to make the best move possible.
+*** search vs games
+search problems have no adversary, it is therefore easy to use heuristics to find optimal solution
+in games the eval function evals the "goodness" of a move rather than distance to a goal
+games use a strategy rather than just finding the path to a goal state
+*** Terminal test
+a function that tells if the game is terminated or not
+*** payoff functions
+gives a numerical value for the outcome of a game
+*** minimax algorithm
+recursively traverse down the tree. select the node with the highest (if it is the maximizing players turn) payoff value and pass it up to one level. recurse. we assume that the minizing player will always take the best move, but if it doesn't its chill. complete and optimal. this only is good if the search space is realitivly small. 
+If we don't want to traverse the whole tree, we can introduce a fixed depth limit and use a cutoff-test. we can also add an additional terminal-test. 
+*** Alpha-beta pruning
+we remove nodes that won't affect the outcome of the search. if the good moves are "ordered", this can speed up the minimax algorithm a lot 
+** Summary
+* Lecture 5
+** Questions
+** Notes
+*** perfect information monte carlo sampling
+assume one state to turn imperfect information into perfect information. 
+** Summary
+* Lecture 6
+** Questions
+** Notes
+*** Formal logic
+we have an ambiguous language to model the environment and its systems, i.e. propositional logic
+*** Entailment vs calculus
+a sentence is entailed by a knowledge base if the sentence holds for all models of the knowledge base. This is entailment.
+*** Model checking and search 
+We look through the whole truth table (will have 2^n iterations). 
+*** SAT solving
+a sentence is entailed by a knowledge base iff. (knowledge base OR (not sentence)) is unsatisfiable.
+If we want to show that a knowledge base entails a sentence:
+1. we translate the knowledge base to CNF
+We translate the negation of the sence to CNF
+Add both negations and then apply a SAT solver until either model is found or the search is exhasted
+**** 
+** Summary
+* Lecture 9
+** Notes 
+Models are very much a simplification of the real world. doesn't account for every variable, all interactions between variables
+*** Conditional independence
+certain variables can be independent assuming a certain variable is true/false. this is cool cause absoloute independence is pretty rare.
+*** Chain rule
+the probability of a bunch of things being true at the same time.
+P(Xn)P(X2|Xn).....P(Xn|Xn......Xn-1)
+*** Bayes' nets
+ models a noisy "causal" process.
+its pretty hard to represnet a whole joint probability table. So we use a graphical model.
+nodes are variables. arcs are the interactions between variables. an arc between 2 variables indicates a direct influence.
+We cannot model cyclic things with a bayesian model.
+*** Markov models
+the difference between markov and bayesian models is that a markov model is more for a sequence of events.
+markov models introduce time and space to the models.
+current state is only dependent on previous state.
+* Lecture 10
+** Notes
+*** Feedback types
+supervised: correct answers for each examples
+Unsupervised: no correct answers given
+semi-supervised leanring: partially labeled examples
+reinforcement learning: occaisional rewards
+*** Types of learning
+classification: classify things into categories
+regression: 
+Ranking: Comparing items, i.e. pagerank
+collaborative filtering, i.e. reccomending movies
+clustering: grouping similar items together, defining similarity is hard
+*** Methodology 
+we have a training set, a held out set or validation set, and a test set.
+* Lecture 11
+** Questions
+** Notes
+*** Nearest neighbour
+we find the nearest point and copy label
+if we have noise, we can use the k-nearest neighbours to classify better.
+we must have a way to tell what is "close" to something else, which leads us to:
+*** text classification
+**** same avg word length
+**** using specific words
+convert text to set. use dimension of a feature vector per unique word. use a 1 for the position word the word occurs. we can use hamming distance to see how different the vectors are.
+if account for word frequency, we keep a count of the word occurance instead of just putting a 1. We can use the inverse document frequency, which is the inverse of how common the word is in the corpus. = NumDocs/
+*** TF-IDF
+We can use the inverse document frequency, which is the inverse of how common the word is in the corpus. = log(NumDocs/number of documents where the term occurs)
+we then multiply this value but the term frequency to get the tf-idf of each word.
+*** Linear classifier
+**** Hyperplanes
+we can seperate points in any dimension, where each dimension is a feature. To get more features, we can modify features, i.e. multiply and add stuff together
+** Summary
+* Lecture 12
+** Questions
+** Notes
+*** Problems with the turing test
+Natural intelligence is sometimes not great, humans have bad memory and make mistakes. Why would we want to copy human intelligence if its not always great
+** Summary
+* Final project notes
+** Good strategies
+Marriages should be made asap
+Trump exchanges are almost always good
+
+
+* Peer reviews
+** Paper 16
+maybe too many variables? are they just investiagating the wide vs deep learning module or batch size?
+** paper 72
+

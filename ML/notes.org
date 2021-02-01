@@ -1,0 +1,104 @@
+* Lecture 1
+** What is machine learning?
+In problems where there is no way to make a clear algorithm (i.e. digit recognition, driving cars, playing chess to some extent), it is the process of teaching a computer by looking at many examples.
+
+Suitable ML problems are problems that we can't solve explicitly, problems with many examples, and problems where approximate solutions with limited reliability, predictability and interpretability is fine.
+
+Typically used inside other software, a small module that makes predictions inside a larger software. Also used in analytics and data science. 
+** Offline learning
+Separate learning, predicting and acting. We take a fixed dataset of example and then train a model to learn from these examples. After this is done, we test the model to see if it works.
+
+*** Process
+1. abstract your problem into a standard task
+2. choose your instances and features
+3. Choose your model class
+4. look for a good model
+** AI vs ML
+ML is a subset of AI techniques.
+
+AI: automated reasoning
+** Data science vs ML
+ML is a subset of DS techniques.
+
+Data science is more about gathering data and interpreting it.
+** Data mining vs ML
+Almost the same field.
+
+More DM than ML: given a large database, find patterns.
+
+More ML: focused more on the task, rather than the data itself.
+** Information retrieval vs ML
+Very disparate, however techniques from both fields are used in each.
+** Statistics vs ML
+Most ML topics and terms are inherited from stats. Stats is more about finding models that match your data.
+** Deep learning vs ML
+A subset of ML techniques.
+** Abstract tasks
+We want to be able to solve a wide range of ML problems with a few techniques. Thus we divide problems into abstract tasks and have models and algorithms that solve these tasks.
+*** Supervised tasks
+Explicit examples of input and output are given.
+
+Classification: assign a class to each example
+
+Regression: assign a value to each example
+*** Unsupervised tasks
+Only inputs are provided, and a pattern is found that explains something about the data.
+** Classification
+A supervised task.
+
+We start with data that is classified, build a learner that spits out a model that can classify new data.
+*** How to turn into a classification problem?
+Take a large set of classified examples, turn each example into a set of features
+
+Example: the digit recognition problem. Turn each pixel in the image into a feature between 0 and 1 depending on how white the pixel is.
+
+Example: chess. Use a classifier to predict based on the board who is the most likely to win. We can take many games and look who won from each position. Not perfect, from many positions both could win. Features could be to count the number of black and white pieces, but we can use domain knowledge of chess to translate things into features.
+*** Model space
+For each coefficient of an equation of a line, we make it on dimension of the model space.
+*** Loss function
+The performance of the model on the data. Lower is better. for example: number of misclassified examples.
+*** Linear classifier 
+plot the data, decide a line (or hyperplane if its higher than 2d space) that separates the data spatially, anything above the line is x and below the line is y.
+*** Decision tree classifier
+go through each feature in a tree, take a branch based on a boolean decision at each node.
+*** K-nearest neighbors
+Lazy classifier. When it gets a new point, it just looks at the nearest k-points and assigns a classification based on the value of the points.
+*
+** Regression
+Another supervised task.
+
+Instead of a class, we have a target that is a number.
+*** Terminology
+We take a dataset instance i with features $X_i$ and we use a function $f(X_i)$ to predict $Y_i$, the true label for $X_i$
+*** Loss function
+complicated formula, but it is basically the mean of the distance away from the true value for all points on the predicted line. it is squared, so that positive and negative errors don't cancel each other out. 
+** Clustering
+Unsupervised. No target values are given, the learner has to decide based solely on features how to classify the values. The number of clusters is a hyperparameter and must be decided beforehand.
+** Density esitmation
+Similar to clustering. Decides if a new point is similar to the points in the dataset.
+*** Generative model
+A model that learns a distribution and creates new datapoints based on that.
+** Semi-supervised learning
+Given a set of labeled and unlabeled data, train the classifier on the unlabeled data, label the unlabeled data with the classifier, and then retrain it on the labeled data + the unlabeled data.
+** Self-supervised learning
+Tends to refer to clever training schemes for deep learning with unlabeled data.
+
+** Social Impact
+*** Sensitive attributes
+Machine learning is inheriently an approxmiate guess of what we are trying to predict, and thus it is not good to predict so-called sensitive attributes
+
+We ask: can this attribute be used for harm? Can it be used to discriminate? Can it amplify bias? Can it be hurtful?
+
+Training data can also be biased, e.g. not represent all cultures or races.
+
+If a behavior is not socially acceptable for people, it is not acceptable for computers to behave like that.
+
+They should be treated with extreme care, consider user communication (i.e. google showing both masculine and feminine translations over prediction.
+** Generalization
+Overfitting: when a model is memorizing the data instead of generalizing it
+
+Important lesson: never judge your models performance on the training data. Simplest way is to withhold some data as test data. 
+
+We want to fit the part of the data that is pattern, and discard the noise.
+*** The problem of induction
+Inductive reasoning cannot be reduced to deductive (rule based) reasoning.

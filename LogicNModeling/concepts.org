@@ -1,0 +1,45 @@
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://gongzhitaao.org/orgcss/org.css"/>
+
+* Elimination Rule
+Tells us how to use a logical connective in an argument. Eliminates that logical operator
+* Introduction Rule
+Defines how to use a logical connective in an argument by introducing it.
+* Provability
+A syntactic notion, shows the existence of a proof.
+* Validity
+A semantic notion, says that the formula is true under any truth assignment.
+* Logical Consequence
+If we have a set of logical formula $\Gamma$ and a Formula A, A is a logical consequence of $\Gamma$ if any truth assignment that makes every formula in $\Gamma$ true also makes A true. Closely related to semantic entailment, i.e. $\Gamma \models A$
+* Soundness
+Every valid formula is provable. If a formula A is provable from a set of set of hypothesis in $\Gamma$, then A is a logical consequence of $\Gamma$.
+* Completeness
+Every provable formula is valid. If a formula A is a logical consequence of a set of formulas $\Gamma$, it is provable from $\Gamma$
+* Logical equivalence 
+$\Psi\equiv\Phi$ if either formula has the same truth value in every model.
+* Existential quantifier $\exists$
+Used to represent the existence of some object in a domain. Can be proven by presenting a candidate and showing that it satisfies the required properties.
+* Universal Quantifier $\forall$
+Asserts that every value in the domain has the property that follows it. Can be proven by showing that it holds for an arbitrary value.
+* Partial Order
+Must satisfy these conditions:
+- Reflexivity: everything is related to itself
+- transitivity: if a is related to b and b is related to c, then a is related to c
+- anti symmetry: if a is related to b and b is related to a, then a and b are equal.
+* Total Order
+Must satisfy all the partial order conditions plus:
+- if a is related to b, then b is not related to a
+* Kripke Model
+Consists of a set of worlds, a set of relations between worlds, and a labeling function. A formula is valid in a kripke model if it is valid in every world.
+* Frame of a Kripke Model
+A kripke model without a labeling function. A formula is valid in a frame if it is valid in every world for every labeling function.
+* Important Correspondences
+- $\Box p\rightarrow p$, $p\rightarrow\Box p$ : reflexive frames.
+- $p\rightarrow\Box\Diamond p$, $\Diamond\Box p\rightarrow p$ : symmetric frames
+- $\Box p\rightarrow\Box\Box p$, $\Diamond\Diamond p \rightarrow\Diamond p$ : transitive frames
+* Compactness Theorem
+A set of first order sentences has a model iff. every finite subset of that set has a model.
+* Decision Problem
+A problem where there is a domain $I$ and a property is true for some subset $Y\subset I$. A decision problem program will return yes if the input $\in Y$, and no otherwise.
+* Induction Principle for Natural Numbers
+If we have a property P of natural numbers, we suppose it is true for 0. Whenever P holds of a natural number $n$, then it holds of its successor $n+1$. 
+

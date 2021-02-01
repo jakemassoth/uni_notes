@@ -1,0 +1,614 @@
+#+OPTIONS: tex:t
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://gongzhitaao.org/orgcss/org.css"/>
+#+TITLE: Databases Lecture Notes
+* Lecture 1
+** Database management system
+allows us to create and modify a database, do queries, persistent storage, durability and failure recovery,
+
+access control
+*** Why not just store in files?
+no query language
+
+weak logical structure
+
+no efficient access
+
+limited protection from data loss 
+
+no access control for parallel access.
+*** ASNI SPARC
+physical, logical, external
+**** Physical level
+How the data is stored.
+**** Logical level
+describes data stored and the relations. a set of tables that contain the data
+**** View level
+application programs to hide details of data types.
+*** Logical data independence
+The ability to modify the logical schema without breaking existing aplications.
+*** Physical data independence
+The ability to modify the physical schema without changing the logical schema. a change in workload could cause a need for different structures.
+*** Concurrent Access and Transaction
+multiple users, concurrent access. 
+**** ACID proerties
+Atomicity, transaction completes fully or not at all
+
+Consistency, database always remains in a constant state where all integrity constants hold.
+
+Isolation, multiple users can modify at the database as if they are operating it alone
+
+Durability, modified data is persistent regardless of disk crashes.
+** Relational models
+cols = properties that every item in the database has
+*** Pure relational model
+in the pure relational model, a table is a set of tuples. has no duplicate tuples. not ordered.
+*** Schema
+the structure of the database. e.g. Customers(id, name, street, city), Accounts(depositor -> Customers(id), accountnr).
+
+instance = the actual content of the database
+*** Integrity constraints
+E.g. Customers(id, name, street, city), there is a primary key constraint on id.
+
+can define datatype constraints, uniqueness, nullability
+
+check constants are logical expressions for domain integrety. e.g. age <= 150
+** Design of database schemes
+*** ER model
+shows the relationship between entities. entities can be seen the same as objects in OO programming. 
+*** UML class diagram  
+uses classes/associations rather than entities/relationships
+
+* Lecture 2
+** Data types
+dom(D) is the domain of D, the set of all possible values.
+** realtion schema
+a realtion scheme s defines:
+
+a finite sequence of attribute names
+
+for each attribute a datatype or domain.
+** Relational database schema 
+defines: 
+
+the set of relation names
+
+A relation scheme for each relation.
+** Database states
+ defines: 
+
+a set of tuples for every relation name in a database schema,
+** Null values
+different from all the values of any datatype.
+
+used to model when no values exists, the attribute is not applicable for the tuple, a value exists but ir not known, or any value will be fine.
+
+negative: there is no clear sematics for null values.
+*** 3 valued logic
+true, false, unknown
+
+used by sql, means that if you want to find the null rows, you must use `where a is null`
+** Integrity constraints
+conditions that every database state has to satisfy
+*** CREATE TABLE constraints
+not null
+
+key constraints: each key value can only appear once
+
+foreign key constraints: values in a column must also appear as key values in another table
+
+check constraints: values must satisfy a given predicate
+** Keys
+a set of attributes that uniquely identifies the tuples in a table.
+
+If 2 keys in different tuples are the same, a DBMS will reject the transaction.
+
+can be seen as a constraint, they refer to all possible database states.
+*** Composite keys
+2 attributes together can be a key, e.g. first-last name of a student.
+*** minimality of keys
+any superset of a key is a key itself
+
+A key is minimal if no subset of it is a key.
+
+in some literature this is the definition of a key.
+*** Primary key
+one key is designated as the primary key. other keys are alternate or secondary keys.
+
+good practice: one simple attribute, never updated. helps with consistency, index and retrieval
+
+** Foreign keys
+because the relational model does not provide explicit relationships or pointers, we can use the key attributes to reference a tuple.
+
+If we want to refer from R to S, we add the primary keys of S to the attributes of R.
+
+implements a one to many relationship.
+* Lecture 3
+database design is a formal model of the relevant aspects of the real world
+
+requires expertise, flexibility, scale
+*** 3 phases
+**** Conceptual
+what info we want to store, relations, constraints, UML and ER
+**** Logical
+trasform conceptual to schema supported by database
+
+relational model
+**** Physical
+designe indexes, buffer sizes, table distribution, buffer sizes.
+*** ER model
+**** rectangles: entity sets
+represents an abstract object, e.g. a specfici person
+
+has attributes
+
+an *entity set* is a collection of similar entities. (share the same properties)
+
+entity -> object, entity set -> class (however does not have methods)
+**** Elipses: attributes
+can consist of other attributes (composite attribute)
+
+can be derives from other attribtes (dashed line)
+
+can have more than one value (muti-valued attribute) (double ellipses) 
+
+**** diamonds: relationship sets
+a relationship is an assocation among sever entities
+
+a relationship set is a set of relationships of the same kind.
+
+connections can be indicated with role indicators.
+
+can have attributes, e.g. actor -> plays-in -> movie, plays-in can have attribute salary.
+**** lines: Link attributes and relationships to entity sets
+**** underline: indicates primary key
+*** cardinality limits
+expresses the number of entities to which another entity can be associated via a relationship set.
+
+uses the UML notation.
+
+if not given, default is many-many
+
+total particpation: every entity in the entity set particpates in at least one relationship in the relationship set.
+
+*** Weak entity set
+an entity set that does not have a primary key
+
+requres an *identifying entity set*
+
+the identifying entity set must have a one to many relationship with the weak entity set.
+
+has a discriminator, distinguishes the weak entity only when used in combination with the identifying entity.
+** IS-A inheritance 
+The same as inheritance in oo programming
+
+lower level entity sets inherit all attributes and relationship sets of higher level ones.
+
+can have membership constraints, e.g. *Person* of age >= 18 is an *Adult*
+
+can have disjoint constraint, e.g. a *Fruit* canbe an *Apple* or a *Pear*, not both.
+
+can have completeness constraints, every higher level entity must belong to at least one lower level entity
+** Aggregation
+allows treating a relationship set as an abstract entity sets
+
+allows relations between relations
+* Lecture 4: Translation from conceptual to relational model
+Big idea: entity sets and relationship sets are tables
+** Optimization
+if we have a many-to(zero or one) relation can be represented with a table with an extra column with the primary key of the one side.
+** Composite and multi-valued attributes
+composite attributes get "flattened out" to different columns
+
+multi valued attributes are moved into another table with columns for the primary key of the table it comes from, and a column for the attribute value.
+** Translating IS-A Inheritence
+Create a table for the higher level entity set, for each lower level entity set include the primary key of higher level entity set and local attributes.
+
+Alternatively, create a table for each entity set with all the local and inherited attributes. If the specialization is total then we don't need a table for the generalized entity. We can define the table of the generilaized entity set as a union of all the specialized tables.
+
+The last method is to have one table with all the local and specialised attributes and put null values
+** Keys
+if there are no good keys, create an artificial internal key. minor disadvantage is that it has no descriptive meaning.
+** Recursive relations
+we can use a foreign key that refers to the same table. If this relation is many-to-many, this requires a second table.
+* Lecture 5: SQL
+=Structured Query Language is used for inserting, querying, updating or deleting data.=
+** Basic syntax
+#+BEGIN_SRC sql
+select Attribute1, ..., AttributeN
+from Table1, ..., TableM
+where Condition
+#+END_SRC
+src_sql[:exports code]{from} defines which tables to query
+
+src_sql[:exports code]{select} defines which columns go in the result table (can be * to select all columns)
+
+src_sql[:exports code]{where} defines a condition on the rows that are considered (leaving out is equivalent to src_sql[:exports code]{where true})
+
+*** Attribute references
+tuple variables can be defined in the src_sql[:exports code]{from}: src_sql[:exports code]{from Table X} or src_sql[:exports code]{from Table as X}.
+** Joins
+We can query multiple tables at once with src_sql[:exports code]{from Table1, ..., TableM}. However, generally we don't want all the results from every table. Thus, we can use a join condition that links the attribute values of another table. for example:
+#+BEGIN_SRC sql
+select *
+from   Table1 X, Table2 Y
+where  X.attributeA = Y.attributeB
+#+END_SRC
+It is almost always an error if there are two tuple variables which are not linked (directly or indirectly) via join conditions
+
+Join conditions often correspond to foreign key relations between tables
+*** Query optimser
+when performing tasks that include join conditions, a DBMS will use a better evaluation algorithm to more efficiently index the rows in a table.
+*** Self-joins
+In some scenarios, we need to query over a table more than once. We might need to consider more than one tuple of the same relation.
+*** Duplicate elimination
+duplicates can be eliminated with src_sql[:exports code]{select disctinct}
+
+can be dangerous, only use if you know why you are getting the duplicate.
+
+is computationally expensive, avoid use if uneccessary.
+*** Inner and outer joins
+In a typical join, only the rows that participate in some match will be considered. In some scenarios, we do not want this default behavior. The typical synatax for doing this is this:
+#+BEGIN_SRC sql
+select ...
+from   Table1 [left/right/full] join Table2
+    on Table1.attribute = Table2.attribute
+#+END_SRC
+
+src_sql[:exports code]{left join} preserves the rows of the left table. All rows of the left table are included in the result
+
+src_sql[:exports code]{right join} preserves the rows of the right table. All rows in the right table are included.
+
+src_sql[:exports code]{full join} preserves the rows of both tables
+
+src_sql[:exports code]{join} is the default join. Rows without match are not incldued
+
+src_sql[:exports code]{cross join} is the Cartesian product or all combinations.
+** Non-Monotonic queries
+So far, we've only dealt with monotonic queries which if further rows are inserted the same query will yield a superset of the previous query rows. (same rows or more)
+
+A non-monotonic query can return less rows after the insertion of data. for example, if we want to query all students who have submitted no homework, it returns some student S. If S then submits homework, the query will return nothing.
+
+to form such a query in sql, we basically check if a subquery is empty/non empty.
+
+*** Negated existensial quantification
+$\exists X(\Phi)$: "There is an $X$ that satisfies formula $\Phi$."
+
+"there is no"
+
+"does not exist"
+*** Universal quantification
+$\forall X(\Phi)$: "For all $X$, formula $\Phi$ is satisfied (true)."
+
+"for all"
+
+"the minimum/maxiumum"
+
+*** IN and NOT IN
+used to check if an attrinute value appears/doesn't appear in the result of a subquery.
+
+supquery can return a single column or multiple
+
+#+BEGIN_SRC sql
+SELECT ...
+FROM   Table
+WHERE  attributeX [NOT] IN (SELECT attributeY FROM ...)
+#+END_SRC
+
+*** EXISTS and NOT EXISTS
+Used to check if a subquery is empty/non-empty
+
+important to use parameterized subqueries, where the tuple variables in the outer query are referenced. however, we can't do the converse. Sort of like local variables in programming
+
+if your subquery is non-correlated, it is almost always a mistake. A subquery will evaluate to a constant table independent of the tuples in the outer query, so the exists/not exists will always be the same value.
+
+#+BEGIN_SRC sql
+SELECT *
+FROM   TableX X
+WHERE  [NOT] EXISTS (SELECT *
+                     FROM TableY Y
+                     WHERE ...)
+#+END_SRC
+*** For all and universal quantifiers
+SQL offers no universal quantifier, but we can hack it in using src_sql[:exports code]{exists} because
+$\forall X(\psi) \iff \neg\exists X(\neg\psi)$
+or in english:
+
+all cars are red $\iff$ there exists no car that is not red
+
+SQL also doesn't have $\implies$ so we can't do the common pattern $\forall X(\alpha \implies \beta)$. However, we can convert it into something SQL understands by doing the following:
+\begin{equation}
+\forall X(\alpha \implies \beta)
+
+\end{equation}
+\begin{equation}
+\neg\exists X\neg(\alpha\implies\beta)
+\end{equation}
+\begin{equation}
+\neg\exists X\neg(\neg\alpha\lor\beta)
+\end{equation}
+\begin{equation}
+\neg\exists X(\alpha\land\neg\beta)
+\end{equation}
+
+*** All, any, some
+Compares a single value with all values returned by a subquery
+
+#+BEGIN_SRC sql
+SELECT ...
+FROM ...
+WHERE attribute COMPARISON ALL/SOME (select ...)
+#+END_SRC
+The subquery must only compute a single column.
+
+These keywords do not extend the expressiveness of SQL. Exists can be used in place.
+
+src_sql[:exports code]{x IN S} is equivalent to src_sql[:exports code]{x = ANY S} 
+** Nested subquery
+="Yo dawg, I heard you like subqueries, so we put subqueries in your subqueries"=
+
+Queries can be nested within subqueries. Usually added in the src_sql[:exports code]{WHERE} clause.
+
+It is necessary to be careful with local variables and assignments.
+
+SQL executes the innermost query first, then the next level.
+
+*** Single Value subqueries
+Single value subqueries return a single value from a single column. Comparison is between atomic values. If there is more than one value, the DBMS will give a runtime error. 
+
+Allows us to write src_sql[:exports code]{. . . where x = (select A from . . .)}
+
+An empty subquery is interpreted as the value null. We could use this to check for an empty subquery result, but this is bad style. If you want to check if a subquery is empty, it is better to use src_sql[:exports code]{exists} or src_sql[:exports code]{not exists}
+
+*** Subqueries under the src_sql[:exports code]{FROM} clause
+Because the result of a query is a table, it seems natural to use a subquery result where a table will be specified. 
+
+Useful if you want to assign a tuple variable to the result of a join or something.
+
+Important restriction: cannot reference tuple variables inside the subquery that are declared in the same from clause.
+
+**** View declaration
+used to register a query (not a query result) under a given identifier.
+
+can be used as a subquery macro.
+#+BEGIN_SRC sql
+create view NiceView as
+select S.id ...
+from sTable S
+where ...
+#+END_SRC
+
+This view can then be used like a stored table
+
+#+BEGIN_SRC sql
+select T, R
+from NiceView
+where ...
+#+END_SRC
+
+** Aggregations
+Allows summarization of sets of values and/or columns
+
+Function from a set $\rightarrow$ single value
+For example:
+\begin{equation}
+min\{42,1,5,1,2,5\}=1
+\end{equation}
+
+SQL defines 5 aggregation fuctions: src_sql[:exports code]{count, sum, avg, max, min}. Some DBMS have more.
+
+Some aggregation functions can get messed up if there are duplicate values, e.g. src_sql[:exports code]{sum, count, avg}. We can fix this by telling SQL that we only want to consider disctinct values, e.g. src_sql[:exports code]{count(distinct A)}
+
+May not be used in src_sql[:exports code]{where} clause
+
+If used without src_sql[:exports code]{group by}, no other attribute may be used in the src_sql[:exports code]{select}.
+
+Usually null values are ignored, except in src_sql[:exports code]{count(*)} as it does not count values, it counts rows.
+
+If the input set is empty, aggregation functions yield src_sql[:exports code]{NULL}, except src_sql[:exports code]{count} which will return 0.
+*** Simple aggregation
+feed the value set of an entire column into the aggregation function.
+
+We can write formulas in simple aggregations, e.g. src_sql[:exports code]{avg(attr1 / attr2)}.
+
+simple aggregations may not be nested, since they return one value, it doesn't make sense to nest them. 
+
+*** src_sql[:exports code]{GROUP BY}
+src_sql[:exports code]{group by} allows us to construct disjoint groups of the tuples. We can then apply aggregation functions to each group.
+
+#+BEGIN_SRC sql
+SELECT    (group by attributes and aggregation functions)
+FROM      ...
+WHERE     ...
+GROUP BY  attributes
+#+END_SRC
+
+groups are formed after the evaluation of the src_sql[:exports code]{from and where} clauses. 
+
+src_sql[:exports code]{group by} never produces empty groups
+
+you can only src_sql[:exports code]{select} attributes that are aggregated or grouped when using a src_sql[:exports code]{group by}
+
+*** Having
+Aggregations may not be used in the src_sql[:exports code]{where} clause, but sometimes it makes sense to filter out entire groups based on some aggregated group property. This is where src_sql[:exports code]{having} comes in
+
+only groups of size greater than $n$ tuples:
+#+BEGIN_SRC sql
+SELECT ...            -- output columns
+FROM ...              -- what tuples
+WHERE ...             -- filter tuples
+GROUP BY ...          -- group tuples
+HAVING COUNT(*) > n   -- filter groups
+#+END_SRC
+
+We can only refer to aggregated properties in the src_sql[:exports code]{having} clause, not attributes.
+*** Subqueries in aggregations
+We can perform subqueries in the src_sql[:exports code]{WHERE} clause. Using aggregations for this is useful as they return one row. For example:
+#+BEGIN_SRC sql
+SELECT S.first, S.last, R.points
+FROM   Students S, Results R
+WHERE  S.sid = R.sid AND R.category = "homework" AND R.number = 1
+AND    R.points = (SELECT MAX(points)
+                   FROM   Results
+                   WHERE  category = "homework" AND number = 1)
+#+END_SRC
+This comparison works as the subquery only returns one attribute. This query returns all students who have the best restult in homework 1. This can also be solved using src_sql[:exports code]{ANY or ALL}
+
+Aggregation subqueries can also be used in the select clause.
+
+A *nested aggregation* is when a subquery is in the src_sql[:exports code]{from} clause. for example:
+#+BEGIN_SRC sql
+select avg(X.homeWorkPoints)
+from (select sid, sum(points) as homeworkPoints
+     from results
+     where category = 'homework'
+     group by sid) X
+#+END_SRC 
+The inner query sums up the homework points for each sid, and the outer one takes the average of all these.
+
+** Case Distinctions
+*** src_sql[:exports code]{UNION}
+Allows us to combine the results of 2 queries. This is needed as there is no other method to construct one result columnn from 2 different tables.
+
+For example, if we have specialisations of a concept are stored in seperate tables, union is useful.
+
+* Lecture 6: Database normalization
+** Functional dependencies
+a generalization of keys
+
+defines when a relation is in normal form.
+
+generally bad design if a schema contains relations that violate normal form. means that data is stored redundantly or that info about different concepts is mixed.
+
+generally takes the following shape:
+
+A functional dependency:
+\begin{equation}
+A_1, \ldots , A_n \rightarrow B_1, ..., B_m
+\end{equation}
+Holds for a relation $R$ in a database state $I$ iff.
+\begin{equation}
+t.A_1 = u.A_1 \land \ldots \land t.A_n = u.A_n
+\end{equation}
+\begin{equation}
+t.A_1 = u.A_1 \land \ldots \land t.A_m = u.A_m
+\end{equation}
+
+In english, if we take 2 tuples and these tuples agree on all values $A$, then they should agree on all values $B$.
+
+It is like a partial key, uniquely determines some attributes, but not all. $A$'s values determine $B$'s.
+
+** Implications of functional dependencies
+If $A \rightarrow B$ and $B \rightarrow C$ holds, then $A \rightarrow C$ holds. 
+
+A set of FDs $\Gamma$ implies an FD $\alpha\rightarrow\beta$ iff. every DB state which satisfies all FDs in $\Gamma$, also satisfies $\alpha\rightarrow\beta$.
+
+DB designers are not interested in all FDs, just a representatitve set that implies all other FDs.
+
+*** Armstrong axioms 
+Used to determine if an FD set implies $\alpha\rightarrow\beta$
+
+*Reflexivity*: if $\beta\subset\alpha$, then $\alpha\rightarrow\beta$.
+
+*Augmentation*: if $\alpha\rightarrow\beta$, then $\alpha\cup\psi\rightarrow\beta\cup\psi$
+
+*Transitivity*: if $\alpha\rightarrow\beta$, and $\beta\rightarrow\psi$, then $\alpha\rightarrow\psi$
+
+*** Covers
+Armstrong axioms can be complicated to use, so we can use a cover instead.
+
+The cover of attributes $\alpha$ with respect to a set of FDs $F$ is the set of all attributes $A$ that are uniquely determined by $\alpha$.
+
+Can be computed by adding each $\beta$ to the cover set $X$ where $\alpha\subset X$ for some $\alpha\rightarrow\beta$ in the FD set, until there are no more things to add.
+
+The cover of a given attribute determines all the attributes that it uniquely identifies.
+
+** Canonical set of functional dependencies
+takes a set of functional dependencies, and computes a small representative set that implies all original functional dependencies. This small set is the canonical set.
+
+Algorithm
+
+1. make the right hand sides singular, e.g. $\alpha\rightarrow\beta_1\ldots\beta_m$ to $\alpha\rightarrow\beta_i$
+2. minimize left hand sides
+3. remove implied FDs
+repeat steps 2 and 3 until nothing can be removed
+** Keys vs Functional dependencies
+Keys ARE functional dependencies. They uniquely determine all attributes of a relation.
+
+Functional dependencies are partial keys. The goal of database normalization is to turn all functional dependencies into keys. This is useful because a key constraint is something that the DBMS can enforce.
+
+** First normal form
+requires that all table entries are atomic. 
+** 3rd normal form
+the standard normal form used in practice. Always exists of a schema with preserving functional dependencies.
+
+*key attribute*: an attribute that appears in a minimal key.
+
+assumes that every FD has a single attribute on the right side.
+
+Every FD left hand side contains a key, or the FD is trivial, or *the left hand side is a key attribute of the relation*. The last condition is the only difference with BCNF
+
+Relation in BCNF $\rightarrow$ relation in 3NF.
+** Boyce-codd normal form
+a bit more restrictive but easier to define. requires that all functional dependencies are keys. If the ER model is well designed, the resulting tables will always be in BCNF.
+
+all FDs are implied by keys. means that for every FD, the right hand side contains a key, or the FD is trivial.
+** Determining keys
+given a set of FDs, we can compute the keys of a relation
+
+A set of attributes is a key of a relation $R$ $\rightarrow$ if the cover contains all attributes. So we can use FDs to determine all possible keys. However, we are only interested in the minimal key.
+
+How to find a minimal key: remove attributes and compute their cover while all attributes are covered until nothing can be removed. This will give us some minimal key, but could lead to different results depending on which order the keys are removed in.
+
+** Determinant
+A minimal (left hand side), non-trivial functional dependency. In a canonical set of FDs, all FDs are determinants.
+** Consequences of bad design
+usually a sign of very bad design if a table contains a FD that is not implied by a key.
+
+Leads to redundant storage, bad because it wastes storage space, makes it difficult to uphold integrity of DB. when something is updated, all redundancies must be updated. more constraints are needed to guarantee integrity.
+
+leads to insertion, updating, and deleting anomalies.
+
+
+
+
+** Splitting relations
+If a table is not in BCNF, we can split it into 2 tables.
+
+If an FD violates BCNF, create a new relation with its left hand side being the key and remove its right hand size from the original table
+
+It is important that we can reconstruct the original relation using a src_sql[:exports code]{JOIN}. This means that the splitting transformation is lossless.
+
+A split is guaranteed to be lossless if the set of shared attributes of the new tables is a key of at least one of the split tables. All splits that follow the process mentioned before will be lossless. It is always possible to transform a schema to BCNF with lossless splitting.
+
+Schema after splits are more general than their original schema.
+*** Computable columns
+can lead to violations of BCNF, but splitting them is not the move. Its better to eliminate the derived attribute and define a view with it in it.
+
+
+
+*** Preserving FDs
+Because FDs can only refer to attributes of a single relation, there might be FDs that can no longer be expressed. 
+** Transforming to BCNF
+We can split tables, however can lead to a lot of unnecessary splits, if the FDs are arbitrary.
+
+Algorithm:
+
+Compute canonical set of FDs
+
+Maximise the right hand sides of FDs, e.g. replace the FD $X\rightarrow Y$ with $X\rightarrow X^{+} - X$
+
+Then split off violating FDs one by one using this process:
+
+If the left hand side is contained in the relation
+
+AND
+
+The left hand side is not a key
+
+AND
+
+The attributes of the left hand size overlap with the attributes of the relation
+
+THEN
+
+Compute the intersection of the right hand side with the relation ($Z$) and remove these attributes from the relation. Then add the union of $Z$ and the left hand side of the FD to the list of relations to check.

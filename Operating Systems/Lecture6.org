@@ -1,0 +1,39 @@
+* Page tables
+** inverted page tables
+as many entries as we have physical pages. We get a hash of a virtual address and use it as an index in the page table. 
+** translation lookaside buffer
+contains the most recent virtual to physical page mapping. This means that when you access it again its right there. we have to hope that programs use a lot of locality
+Modern processors have heiarchy of TLBs
+pretty pricey
+*** flushing TLBs
+we need to flush when we context switch or it will leak data to other processes.
+*** TLB misses
+Sometimes handled by the os (flexible), sometimes handled by hardware (efficient).
+walk the tables, to find mapping. if we find one, its a soft miss, if not, page fault
+** page fault
+*** access violation (segfault)
+*** Legal access
+**** the page is alread in memory
+the page is in memory, but not in your page table
+**** the page needs to be fetched from disc
+very expensive
+*** Page replacement algorithms
+**** optimal
+replace the page that will be referenced as far in the future as possible. requires knowledge of everything that will be accessed in the future
+**** Random
+**** Not recently used
+replace a page at random, but prioritize ones that are not recently used
+**** FIFO
+use a queue of faulting pages and replace head
+**** second chance algorithm
+an improved fifo. you see if the head has been referenced, if not replace it. if it has, you set the reference bit to 0 and move it to the back of the queue.
+**** CLOCK algorithm
+improved second chance. uses a circular queue. the pointer points to the oldest page.
+**** Least recently used
+replace page tha that has been unused for the longest.
+**** Not frequently used
+maintain per page counters, an approximation of LRU. an issue is that it never "forgets pages"
+**** aging
+imrpoved NFU.
+
+

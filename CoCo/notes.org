@@ -1,0 +1,479 @@
+* Lecture 1: Overview
+A compiler is a program that translates source language into a target language. It is written in an implementation language. For example, C++ to ARM or Java to JVM. Some language to itself compilers exist to make code smaller, more performant.
+
+For all compiler use cases, we do analysis on the properties of a program, and then transform that code into something else (synthesis)
+
+Compilers typically produce machine code, interpreter executes source code generating some intermediate representation along the way.
+** Compiler organization
+Separating analysis and synthesis is useful as if you want to support more architectures, you just have to add another backend. Conversely, if you want to support another source language, you just need to add a front end. With L+M modules, you can have L*M compilers.
+*** Front end
+For lexical/syntax analysis, tokenization, context handling, intermediate code (IC) generation
+*** Semantic representation
+Where most of the interesting stuff takes place, the heart of the compiler. Represents code in the form of a AST or similar representation.
+**** AST
+Tree representation of the syntax of a program, AKA parse tree.
+
+Structure that shows how various code segments are to be viewed in terms of grammar.
+
+We can annotate ASTs with the type of things and their location (sp+X, regN)
+*** Back-end
+For optimization on IC, code generation
+** Lets make a compiler
+The main program calls the parser (front end) and Process (back-end)
+*** Lexical analysis
+A scanner (or lexical analyzer) simply turns an input string into a list of tokens. A parser converts this list of tokens into something representing how the tokens fit together.
+*** Context handling
+There are cases where the same sign can mean 2 different things based on the context, e.g. * and + doubling as AND and OR.
+*** Code generation
+Generate code by recursive traversal of parse tree. 
+** What makes a compiler a good compiler
+A compiler should generate correct code. Not trivial as things get complicated
+
+Conform to language spec, should be able to handle all parts of a language while still offering decent compile speed
+
+Good error reporting, where things go wrong and what exactly went wrong.
+
+Should generate fast, small code.
+*** Other issues
+portability, retargetability, optimizations.
+* Lecture 2: parsing and lexing
+To reiterate, the frontend takes a string and turns it into an AST.
+** Grammars
+describe how languages are formed
+
+Give a number of rules that generate the language. These rules consist of productions which are a mapping from head->body. You can derive these expressions by replacing head with body. These symbols can be terminal or non-terminal, where non terminal ones expand into terminal ones
+*** Context-free grammars
+Context-free grammars introduce the restriction that head is a single non-terminal symbol.
+
+A CF grammar is left recursive when we first expand the symbol on the left. Same for right recursive. 
+
+A grammar is ambiguous if there are several different derivations for the same sentence.
+** Formal language
+an alphabet is represented by $\sigma$, it is a finite set of symbols that can be used in the language.
+
+A language consists of a set of finite sequences in $\sigma$
+
+Sentinel form: any string that we can derive from the list of productions
+
+a sentence is a sential form that consists of terminal symbols
+
+The language that a grammar produces L(G) is the set of all sentences that can be derived from the start symbol S
+** Recognizer
+Given a sentence and a Grammar, a recognizer will return if that sentence is in the grammar. 
+** Parsers
+Split into lexing and parsing
+*** Lexer
+removes whitespace, comments
+
+transform source code into a sequence of tokens.
+
+produces a token which contains a name and a value. To do this it needs a pattern which describes how each pattern looks. It uses a lexeme which is a string that matches the pattern. 
+*** Parsing
+Looks at tokens and decides if tokens are in grammar by building a derivation.
+*** Errors
+when seeing an invalid token, you could give up or try to fix it by inserting or deleting chars.
+** Parse Trees
+The ulitmate goal is to generate an AST. To do this we need a CFG for the language and then we construct a derivation of the string S. From this derivation we construct an parse tree which can eventually be turned into a AST. 
+
+We start with a start symbol S and apply productions. applying productions means to replace a symbol by the left hand side of a matching production rule. We can construct a parse tree by writing a derivation as a tree. Leaves of the tree are terminal nodes and internal nodes are non-terminal. 
+
+The root is the starting symbol S.
+*** Parse tree to AST
+deleting informal nodes.
+** Derivation order
+for some production A->B, if we have xAy, we replace by xBy. In some grammars, it doesn't matter which derivation rule you apply first but this is not always true. Some grammars might reqire you to chose the leftmost or rightmost symbol first.
+*** Ambiguity
+A grammar is ambiguous if for some sentence there exists 2 different parse trees. An ambiguous grammar could give you ill defined programs that don't have the same meaning depending on how you parse them. 
+
+You can disambiguate a grammar by adding more non-terminal nodes.
+** Top down parsing
+Takes a stream of tokens and produces a leftmost derivation. It uses look ahead, where it looks at the next character to determine which production to apply.
+
+Its pretty easy to write, however not all grammars are LL(1) 
+** Bottom up parsing
+Similar to top down, but uses rightmost. Starts with the final string, and applies production steps in reverse to get back to a start symbol. Harder to write by hand and works for most programming languages. 
+* Lecture 3: Loops and control flow graphs
+** Control flow graphs
+A graph representation of a loop. Nodes are basic blocks which are is a linear sequence of instructions with exactly one entry and exit point. Edges represent a control flow from one node to the other.
+*** Dominance
+A node D in the graph domination a node N iff every path through the entry node has to pass through D to reach N. The immediate dominator node is the last dominator node among paths from the entry node. 
+**** Dominator Tree
+Each node only dominates its descendants. Entry is root. For all non-entry nodes, draw an edge from idom to n.
+** Depth-first spanning tree
+A tree that visits all nodes in the control flow graph starting at the entry. 
+
+If there as edge to a node we haven't visited yet, we follow it and mark that edge. 
+
+If there is no suitable edge, we backtrack to the parent and start again.
+** Classifying edges of control flow graphs
+*** advancing edges 
+Advancing edges are edges that actually advance the control flow. Formally, an edge from n to m is a advancing edge if m is a descendant of n in the depth-first spanning tree.
+*** retreating edges
+An edge from n to m where m is an ancestor of m
+*** cross edges
+from n to m if neither n to m are common ancestors.
+*** Back edges and reducability
+An edge a->b is a back edge if b dominates a. Every back edge is a retreating edge but the inverse is not true. 
+
+A control flow graph is reducible if all retreating edges are also back edges. 
+
+Using a structured control flow such as while, for ife, break will produce reducible loops. Gotos produce non-reducible loops.
+** Natural loops
+Has a single entry, no jumps to the middle of the loop. D dominates all nodes in the loop. has a back-edge toe the header.
+** Analysis for optimizations on basic blocks
+Common subexpression elimination: value is computed twice in a basic block, so we can elimate one of them. ASTs are not great for doing this kind of analysis, but a dependency directed acyclic graph (DAG) is better.
+*** Dependency DAG
+Instead of creating a new node every time there is a new expression, we can reuse a link to them.
+*** Desugaring
+i.e. i++ -> i = i + 1, desugaring for loops to while loops
+
+This is useful because then we only need to keep track of the intermediate representation of a few different constructs, and we can convert other things to those constructs.
+*** Context analysis
+for each variable, find out which scope its in.
+*** Type checking
+Make sure that the type of a parameter matches the expected type
+* Lecture 5: LLVM
+Stands for Low-Level Virtual machine. Was created to have a more modular and easier to perform optimizations than GCC.
+** LLVM compiler infrastructure
+Provides reusable components for building compilers, building blocks for a compilers
+** LLVM Compiler framework
+End-to-end compilers using the infrastructure. Has frontends for c/c++ and many others, backends for different architectures.
+** LLVM IR
+*** Unlimited registers
+Real CPUs have a fixed number of registers, but LLVM IR has a unlimited number of virutal registers. A registor allocator determines the mapping of LLVM virtual registers to real registers
+*** Single Static assignment
+Variables may only be assigned once. For each function, for each variable foo, there is only one statement in the form foo = whatever
+
+Most imperative languages allow variables to be changed more than once, so it needs to be supported by LLVM which is difficult. However this form allows for simplicity and better optimizations.
+
+We can exploit the fact that the LLVM store instruction can be used as many times as we want to keep track of intermediate values and store temp registers to one memory location. This results in a lot of redundant memory operations, but LLVM has built-in optimizations to help with this. 
+*** Syntax basics
+Looks kinda like a primitive decorated version of C where everything is typed. Global stuff begin with @, local stuff begin with % which is the register character. 
+
+Instructions look like : ~x = instruction type y, z~
+
+Initializers are made explicit, if you declare char c; the llvm witll be @c = global i8 0.
+*** Type system
+primitive types: int (of aribitrary bitwidth, i16, i32, i8, i1), float, double, label, void. the int types have no signedness, but operations are signed.
+
+Derived: pointer, array, struct, function
+
+Allows arbitrary casts which allows expression weakly typed languages like C.
+
+There are no high level types, no classes and stuff so that it is totally language neutral. Language types are lowered, which could be a lossy transformation. Implicit types and casts are made explicit. 
+*** Structure
+Split in to modules, which are similar to C files. Contains global variables, composite types, function declarations and definitions.
+*** PHI instruction
+Selects from 2 values based on control flow. ~%phi = phi i32 [%a, %block-a ], [%b, %block-b]~ will select ~%a~ if coming from block-a and ~%b~ otherwise. 
+
+Phi nodes and phi instructions must come before any non phi instructions in a basic block because it selects the values that will be used in that basic block.
+*** Getelementptr
+Represents pointer arithmetic because load and store accept no offsets. You can only do address+offset calculations via GEP.
+
+Start from a pointer of a given type, and then walk down other pointers.
+
+It never actually accesses the memory itself. It only indexes something and computes the resulting address.
+*** Basic Block
+A sequence of instructions that execute in order. Must end with a terminator instructions, ~br, ret, indirectbr, switch, invoke~. Call is not a terminator as the execution resumes at the same place after the call.
+
+In LLVM you can't jump to the middle of a basic block. Other low level languages such as x86 assembly support this, but LLVM prohibits it to make reasoning about execution easier so that optimizations can be performed.
+*** Loops 
+In LLVM there is no explicit "Loop" instruction. We can represent loops by basic blocks and branches connecting them. 
+* Lecture 6: Optimizations
+definition: code transformations that improve the program. Could be a space optimization where memory use is improved. Time optimizations improve execution time. Typically, space optimizations will come with a time increase, and vice versa. It is very important that these are "safe", where they preserve the meaning of the program. They should be done "conservatively" where optimizations not performed if you can't prove the corectness of the code.
+
+Optimizations are typically performed at High IR and then at low IR. LLVM uses multiple kinds of representations at code-generation time and optimizations are performed on all those representations
+
+Programmers can't always write optimal code, and in some languages optimizations are impossible to write or less readable. This is why we do optimizations in the compiler.
+
+when performing optimizations that increase the space, it is important to not overdo it. If the code size increases exessively, it could have a performance hit as the instruction cache could get overloaded and thus decrease the performance. 
+** Applied at high IR
+*** Function inlining
+replace a function call with the body of the function. Reduces time as function calls are expensive. Recursive functions are hard to inline.
+*** Function cloning
+Clone functions to create specialized versions that are called from different call sites with different arguments. E.G. f(a, 1, 2) becomes f1(a) with 1 and 2 as constant.
+
+After doing cloning, more optimizations can be performed.
+** Applied at Low IR
+*** Constant folding
+If constants are known at compile time, we can perform the calculations at compile times
+
+It is performed at every stage as constants can be created by other optimizations, i.e. array address calculations. 
+*** Constant propogation
+If a value of a variable is known to be constant, we can replace the use of the variable with the constant. Eliminates expensive variable accesses.
+
+Needs to be applied multiple times as variables can become constant in other passes
+*** Copy propogation
+After assignement x = y, replace uses of x with y. If there was an assignment before y = z, then we recursively apply the optimization.
+*** Alegraic simplification
+a*1 = a, remove divide by 1's i.e.
+
+Be careful with floating points as the result is determined by the architechture of the hardware which is not known in the middlend.
+*** Common subexpression elimination
+Program computers the same expression multiple times -> reuse computed value. 
+*** Unreachable code elimination
+Remove code that is never executed. 
+*** Dead code elimination
+Similar to unreachable code elimination, but works with code that is executed but is not interesting to execute. for example, some computation that is never used later in the program. A variable is dead if the value is never used after the assignment.
+*** Strength reduction
+Replace costly operations such as * and / by cheap ones such as + and -. Most effective when used on loop variables which value depends on the iteration number. This is most effective as the strenth reduction optimization becomes most efident as it happens many times in a loop.
+*** Loop optimizations
+Loops are often hot spots as most execution time in a program is spent in a loop.
+**** Loop invariant code motion
+If there are statements that do not change during the loop, move it outside of the loop. Often useful for array element addressing computation, however the invariant code is often not visible at the source level so the optimization must be performed on the IR.
+**** Induction variable elimination
+If there are multiple induction variables, eliminate the ones that are only used in the test condition. We can rewrite the test conditions in the terms of another induction variables. Will reduce the number variables, thus reducing the number of registers that code needs to use.
+**** Loop unrolling
+Execute the loop body multiple times at each iteration which reduces the number of times that the condition needs to be tested which reduces expensive conditional branches, however it increases the space. 
+
+If the trip count is statically known, you can literally just copy the loop statement(s) the number of times of the trip count 
+
+** Applied at Assembly level
+- Instruction selection
+- Peephole optimizations
+- Register allocation
+** What order to run optimizations?
+Keep in mind that some optimizations will run multiple times
+*** 1. Simple dependencies
+An optimization that creates another oppportunity for an optimization. i.e. constant or copy propogation resulting in dead code elimination
+*** 2. Cyclic dependencies
+Iteratively apply different optimizations, i.e. constant folding and constant propogation
+*** 3. Adverse interactions
+One optimization interferes with another. For example, common subexpression elimination could result in more variables which will mess with register allocation. Hard to get right, modern compilers use domain-specific knowledge to put optimizations in the best order they know how.
+** How to implement?
+*** Example: Dead code elimination
+We need to know if a variable is live or used after elimination. We can use the CFG to define program points and study how information flows between these points.
+**** Program points
+There is a program point before each instruction and after each instruction. We can then use this to study the effect of the instructions and the effect of control flow.
+
+We can compute live variables at each program point and keep track of in[I] which are the live variables at program point before I and out[I] which is the live variables at program point after I. For each basic block, we compute in[B] which is the live variables at the beginning of a basic block B and out[B] which is the live variables at the end of B. If I is the first instruction in B, then the inset of B is the same as the inset of I. If I is the last instruction in B, then the outset of B is the outset of I. 
+
+We want to understand the relationship between In[I] and out[I]. Each variable live after I is also live before I unless I writes to it, and each variable I reads is also live before I.
+
+Formally
+
+\begin{equation}
+in[I] = (out[I]-def[I])\union use[I]
+\end{equation}
+
+Where def[I] is the variables defined by I and use[I] is the variables read by I.
+
+For control flow, a variable is live at the end of a block B if it is live at the beginning of one or more successor blocks. Formally:
+
+\begin{equation}
+out[B] = \union in[B_s], B_s \element succ(B)
+\end{equation}
+
+To put it all together, we start with a CFG and derive a system of constraints between the live variable sets. We start with an empty set of live variables, iteratively apply constraints (formulas) until we find a fixed point.
+**** Steps
+1. Compute the def/use sets at each instruction
+2. pick program points in postorder iteration of CFG
+3. Compute live set constraints at basic block granularity
+4. iteratively apply constraints until convergence is reached.
+*** Example: Copy propogation
+We need to determine copies available at each program point. 
+**** Part 1: analyze instructions
+For each instruction I, in[I] is the copies of form <x = y> available at the program before I and out[I] is the copies avaiable after I. For each basic block in[B] is the copies avilable at the beggining of B and out[B] is the copies available at the end of B
+
+Knowing in, we can compute out. We  start with all copies from in and eliminate copies <u = v> if variable u or v is overwritten by I.
+
+Formally:
+\begin{equation}
+out[I] = (in[I] - kill[I]) \union gen[I]
+\end{equation}
+
+where kill[I] is the copies killed (invalidated) by the instruction and gen is the copies generated by the instruction. 
+
+This is different to the dead code elimination example as information flows forward from in -> out
+**** Part 2: analyze control flow
+A copy is available at the beginning of a block B if it is available at the end of all predecessor blocks.
+
+Formally: 
+\begin{equation}
+in[B] = \union out[B_p], B_p \element pred(B)
+\end{equation}
+
+Information flows forward
+**** Steps
+1. Start with an empty set of available copies at the start and a universal set of available copies everywhere else
+2. iterative apply constraints specified in the formulas above
+3. Stop when a fixed point is reached.
+** Data flow analysis
+Live variable analysis and detection of available copies is pretty similar. We first define information that we need to compute, build constraints on that information and then solve constraints iteratively until a fixed point is reached. This general framework is known as data-flow analysis.
+*** Transfer function
+Describes how the each instruction modifies the information
+
+For example, for forward analysis: out[I] = F(in[I])
+
+Backward analysis: in[I] = F(out[I])
+
+This can be extended to a basic block B by unioning all the F(B) for each basic block.
+*** Meet operators
+Used at split/join points between basic block. Can be union or intersection depending on the type of analysis being performed.
+
+Forward analysis: $in[B] = \intersection {out[B_p] | B \element pred(B)}$
+
+Backward analysis: $out[B] = \intersection {out[B_s] | B \element succ(B)}$
+*** Data-flow equations
+Transfer functions and meet operators define the data-flow equations. We can solve these equations iteratively until a fixed point. 
+
+A more efficient way to do this is a worklist algorithm, where we keep a list of instructions to evaluate which is initialize the set of all instructions. If out[I] changes after evaluating it, then add all successors of I to the worklist. This is more efficient as only program points where the information has changed are re-evaluated. 
+*** Data flow representations
+We want to derive compact data flow representations that can be used across analyses to improve efficiency.
+**** Definition use chains
+Definition of a variable and all the uses, reachable from that definition without any intervening definitions. 
+
+A chain which includes a definition and all of its uses in the CFG without a definition that could override the original one.
+
+For example: X = 1, X = 2, use(X). (X = 1) will have an empty chain whereas (X = 2) will have use(X)
+**** Use-definition chains
+Use of a variable and all definitions of that variable that can reach that use. Start from use -> associate reaching definitions
+**** Analysis using DU/UD changes
+We start with a worklist, and at each step remove an instruction and compute the transfer function. We then propagate information to all the use/defs and add them to the worklist. The algorithm is terminated when the worklist is empty.
+**** Problems with DU/UD chains
+These chains can get really big for large programs.
+** Single static assignment
+UD/DU chains can get really big, so we should rewrite the program to explicitly expresses the DU/UD relation. Each variable only once.
+*** For control flow and loops
+We can use PHI nodes (discussed above) to use SSA with control flow. This also works for loops.
+
+placing these phi nodes at each join point is pretty inefficent. You might end up with redudant phi nodes. We don't need to place phi nodes where a definition dominates a basic block as any path to B goes through the definition, and thus there is no ambiguity on what the value can be.
+
+Formally, the dominance frontier of I is the basic blocks such that I dominates a predecessor of B, but does not strictly dominate B. If an instruction I defines a variable X. then we need to place a phi node for x at each of the basic blocks in the dominance frontier of I.
+*** Space requirements
+If we have N definitions which may reach M uses, we need N*M space, however for SSA form we only need N+M
+
+We can still do data-flow analysis, as the DU/UD is exposed in the code. If a use def-use chain is non-empty, then the variable is live
+** LLVM optimizations
+Frontends generate "ugly" memory based code in non SSA form. LLVM has built in transformation passes to generate SSA. One is alloca-hoising which moves the allocas to the beginning of functions. One is variable promotion which generates SSA and inserts PHI instructions.
+*** Cannonical loop form
+There is a loop-simplify pass in LLVM which converts all the natural loops in a program to a standardized form.
+**** Pre-header insertion
+Adds a node that is the only predecessor of the loop header. This is useful as now there is a single basic block where you can add code from other optimizations
+**** Latch Insertion
+Adds a starting node of the only backedge. Then we have a single backedge going from the latch node to the loop header. This is useful as if you need to add some code at the end of every loop, then you can add it to the latch as it will get executed at the end of every iteration of the loop. 
+**** Exit block insertion
+A block that only has predecessors outside the loop. Useful if you need to add code that runs at the exit of the loop. 
+* Lecture 8: Alias Analysis
+LLVM is only SSA for registers, not for memory. You can store multiple different values in a single pointer to memory.
+** Aliasing
+When there are multiple pointer names that point the same address. Alias analysis tries to determine what memory location(s) a pointer might point to and asks the question: when do two pointer expressions refer to the same storage location?
+** Pointer analysis
+Tells us which memory locations code uses/modifies.
+
+Important for cases such as ~*p = a + b; y = a + b~. If ~*p~ aliases A or B, then the second computation is not redudant as the value of a or b could have changed. This is important for many analyses.
+
+For example, with live variables, before any instruction of the form ~x = *p~ all variables may be live as p can point to anything.
+*** Flow sensitive vs flow insensitive
+Flow sensitive computes for every program point what memory location could possible refer to. By contast, flow sensitive only checks what locations a pointer could refer to at any time in its lifetime. Flow sensitive is generally too expensive to perform on the whole program.
+*** Context sensitivity
+Context sensitive considers the calling context (call stack) when analyzing the target of a function call. 
+*** Definiteness
+May alias analysis considers aliasing that may occur during execution, must alias analysis consdiers aliasing that must occur during execution.
+*** Modeling memory locations
+How do we distinguish different memory locations? For global variables its easy, just use a single node. For local variables, use a single node per context. However for dynamically allocated memory at runtime, we need to have a model of memory. For this case, we can use a single node per context for each allocation *statement*.
+** Example: flow insensitive may pointer analysis
+We have a program with statements of the form:
+
+~p = &a~
+
+~p = q~
+
+~*p = q~
+
+~p = *q~
+
+where p and q are pointers. We want to compute points to pairs for these pointers.
+
+We can use andseren-style pointer analysis. This views pointer assignments as subset constraints and uses that to propagate points-to information. It is flow insensitive, it essentally defines what memory locations a variable could point to in terms of subsets at any point in the variable's lifetime in execution.
+*** Andersen
+Basic idea: view pointer assignments using set constraints (usually in a graph). One node is each variable, one directed edge for each constraint.
+
+Very well studied problem, best known complexity is O(N^3)
+**** Procedures
+Insert constraints for copying actual parameters to formal parameters, also insert contraints for copying return values.
+* Lecture 9: Memory corruption
+** Buffer overflows
+Buffer overflows are the most important and common memory error. We can instrument the source code to check for them, however there are performance and compatibility issues with that. We are better off instrumenting the LLVM IR, however we should only do it if it is provably unsafe. 
+** Use-after-free/dangling pointers
+When an object has been freed but there are still pointers that point to it. generally okay until someone start using the pointers.
+
+Attackers can create stale pointers to overwrite code pointers to do arbitrary code exectution.
+
+You can instrument code by making pointers null after freeing, however this is difficult as you need to also nullify all the aliases.
+
+You can also zero-out the memory after freeing. This can be expensive and it does not solve the problem as the pointer still exists and an attacker can write anywhere and still transfer control flow.
+** DangSan
+A scalable use-after-free protection method.
+
+It is very difficult for the compiler to figure out statically which pointers are stale. This is where DangSan comes in.
+*** Design
+Keep track of pointers in each memory block using additional metadata on the heap, and when freeing invalidate all pointers. This causes a subsequent de-reference to crash the program.
+*** Metadata
+We need to quickly locate the metadata slot, and we need to organize the metadata in a sensible manner. 
+**** Organization
+We keep track of per-thread logs. This way we don't need to worry about thread race condition. On a store instruction, we append the ptr to the log (lockless). On a free, we go through the logs and invalidate each ptr.
+
+It is normal for a pointer to be stored in the logs more than once.
+
+Frees are less fast, however this is okay as stores are more common and those are really fast.
+**** Locating the metadata slot
+The fastest way is to use "shadow memory". The metadata is kept at a fixed offset from the heap block.
+*** Implementation
+We need to intercept malloc's, frees and stores to variables of pointer types (pointer propogation). Parsing and rewriting source code is not nice, so we can use the compiler and the LLVM framework to achieve this.
+
+To intercept these, functions with the same names are added to a shared library which has the advantage of also intercepting functions called by other libraries.
+** Control flow integrity
+"only allow legitimate branches and calls" -> all branches that are permissible based on the control flow graph.
+*** fine-grained CFI
+Each basic block is given an ID. We check every time there is a br that the it is jumping to a valid basic block.
+
+Requires a very precise CFG (so won't work on binaries). This is easy if we can statically determine where the jump target is. However if theres a function pointer or something, it can be hard to statically determine which functions the pointer can point to. We can use alias analysis to achieve this.
+
+has a big performance overhead.
+*** Loose CFI
+more commonly adopted, uses few labels. Functions can return to any call site in the program.
+
+Can be used on binaries
+** Data flow integrity
+Checking every time you load a value that it is produced by an instruction that you trust. Less influential than CFI as its more expensive to implement.
+
+Compute for every load the set of stores that may have produced the data. Check at run time that it came from an allowed store.
+
+At compile time, compute reaching definitions and set an ID to every store instruction. Assign a set of allow source IDs to every load. Check at run time via the runtime definitions table (RDT). RDT must be protected because an attacker could modify it and all the DFI would be lost.
+*** Advantages 
+broad coverage: detects control data and non control data attacks.
+
+automatic: policy can be extracted from unmodified programs
+
+no false positives: only detects real errors. could be malicious or programmer bugs.
+*** Optimizations 
+We can remove SETDEFs and CHECKDEFs that we can prove will always succeed.
+* Lecture 10: Code Generation
+We want to feed our optimized low IR to the code generator to make assembly code
+** Low IR vs assembly
+Low IR has unlimited virtual registers, wheras there are finite registers in assembly
+
+Low IR uses abstract named variables, whereas in assembly variables are just memory locations with no names
+
+In assembly the processor needs to use a run-time stack with special instructions to implement function calls and returns.
+
+Assembly is limited by the instruction set of the target machine whereas llvm IR has an abstract set of instructions.
+** Translation
+Register allocator: maps variables -> memory accesses or machine registers as much as possible. We spill machine registers to stack when we are out of registers
+
+Translate function calls -> appropriate calling sequences that correspond to the target arch. Also need to save and restore data on the stack via push/pop operations
+
+Map sets of low IR instructions -> instructions on target machine
+
+Sometimes, its pretty easy. We can find a simple mapping for each IR instruction onto a corresponding language instruction. However, if this mapping is not good it could undermine performance improvements made during optimization. 
+** The good, the bad and the ugly
+LLVM IR maps pretty well to RISC-arch instruction sets as its GEP operator is similar to how these architectures do address calculation. However, with CISC, the mapping is a little more complicated and at first glance may seem like a non-optimized source code compiler could generate faster code due to how CISC calculates memory addresses. In addition, we need to consider that different instructions may have different costs on n-bit CISC architectures.
+** Instruction selection
+The process of mapping on IR instruction set to a machine instruction set. The general approach used is pattern matching, where we identify patters of intermediate code sequences where efficient target instructions can be used.
+
+To make patterns easier to spot, we turn a sequence of instructions into a dag where the edges represent user of relations.
+
+We can express this as a tree-tiling problem, where patterns in trees are mapped to instructions. However, how do we choose the best tiling when there could be multiple possibilities? A naive strategy would be to traverse the tree and generate all tilings and pick the best but this is obviously unscalable. We could also use heuristics to explore more promising subtrees, however this is still to expensive as we keep re-computing intermediate results.
+
+A more efficient way is to start at the bottom of a tree and incrementally calculate larger subtree results and cache the results. This is basically a dynamic programming approach. 
